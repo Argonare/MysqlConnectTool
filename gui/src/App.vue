@@ -1,5 +1,5 @@
 <template>
-	<div style="height: 100%">
+	<div class="flexItem">
 		<index></index>
 		<router-view></router-view>
 	</div>
@@ -13,5 +13,13 @@ import Index from "./view/index.vue";
 
 
 <style>
-
+.flexItem{
+    display: flex;
+    flex-wrap: wrap;
+    height: 100%
+}
+@font-face {
+  font-family: 'PingFangSC-Regular';
+  src: url('./assets/font/PingFang Regular.ttf');
+}
 </style>

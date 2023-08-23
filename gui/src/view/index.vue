@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 
-import {onMounted, ref, watch} from 'vue'
+import {nextTick, onMounted, ref, watch} from 'vue'
 import ConnectDialog from "@/components/connectDialog.vue";
 import MenuItem from "@/components/menuItem.vue";
 import ConnectTree from "@/components/connectTree.vue";
@@ -18,125 +18,229 @@ const connectTree = ref(null)
 const rightWindow = ref(null)
 
 const connectData = (params: Object) => {
-	connectTree.value.addData(params)
+    connectTree.value.addData(params)
 };
 onMounted(() => {
-	connectTree.value.refreshData()
-	if (route.path !== '/') {
-		console.log('1');
-		store.commit('add_tabs', {route: '/', name: '首页'});
-		store.commit('add_tabs', {route: route.path, name: route.name});
-		store.commit('set_active_index', route.path);
-	}
-	else {
-	// 	console.log('2');
-	// 	store.commit('add_tabs', {route: '/', name: '首页'});
-	// 	store.commit('set_active_index', "/");
-	// 	router.push('/');
-	}
+    setTimeout(() => {
+        connectTree.value.refreshData()
+    }, 1000)
+    console.log("index")
+    if (route.path !== '/' && route.path !== '/empty') {
+        store.commit('add_tabs', {route: '/empty', name: '对象'});
+        let nickNames = route.fullPath.split("nickName=")
+        let nickName;
+        if (nickNames.length == 1) {
+            nickName = route.name
+        } else {
+            nickName = nickNames[1]
+        }
+
+        store.commit('add_tabs', {route: route.fullPath, name: route.name, nickName: nickName});
+        store.commit('set_active_index', route.fullPath);
+    } else {
+
+        store.commit('add_tabs', {route: '/empty', name: '对象'});
+        store.commit('set_active_index', "/empty");
+        router.push('/empty');
+    }
+    dragControllerDiv()
 });
-watch(router.currentRoute, () => {
-	let flag = false;
-	for (let item of store._state.data.openTab) {
-		console.log("item.name", item.name)
-		console.log("t0.name", route.name)
+watch(router.currentRoute, (to) => {
+    console.log("watch")
+    let flag = false;
+    for (let item of store.state.openTab) {
+        if (item.route === to.fullPath) {
+            store.commit('set_active_index', to.fullPath)
+            flag = true;
+            break;
+        }
+    }
 
-		if (item.name === route.name) {
-			console.log('to.path', route.path);
-			store.commit('set_active_index', route.path)
-			flag = true;
-			break;
-		}
-	}
+    if (!flag) {
+        let nickNames = to.fullPath.split("nickName=")
+        let nickName;
+        if (nickNames.length == 1) {
+            nickName = to.name
+        } else {
+            nickName = nickNames[1]
+        }
+        store.commit('add_tabs', {route: to.fullPath, name: to.name, nickName: nickName});
+        store.commit('set_active_index', to.fullPath);
+    }
 
-	if (!flag) {
-		console.log('to.path', route.path);
-		store.commit('add_tabs', {route: route.path, name: route.name});
-		store.commit('set_active_index', route.path);
-	}
 });
-
+const dragControllerDiv = () => {
+    let left = document.getElementById('left-tree')
+    let line = document.getElementById('resize')
+    let right = document.getElementById('right-content')
+    // 鼠标按下事件
+    line.onmousedown = function (e) {
+        let startX = e.clientX
+        line.left = line.offsetLeft
+        // 鼠标拖动事件
+        document.onmousemove = function (e) {
+            let moveLen = line.left + (e.clientX - startX)
+            if (
+                moveLen >= document.body.clientWidth * 0.1 &&
+                moveLen <= document.body.clientWidth * 0.5
+            ) {
+                line.style.left = moveLen + 'px'
+                left.style.width = moveLen + 'px'
+                right.style.width = document.body.clientWidth - moveLen + 'px'
+            }
+        }
+        document.onmouseup = function () {
+            document.onmousemove = null
+            document.onmouseup = null
+        }
+    }
+}
 
 const addConnect = () => {
-	connectDialog.value.show()
+    connectDialog.value.show()
 }
 
 </script>
 
 <template>
-	<menu-item></menu-item>
-	<div class="scroll">
-		<el-col :span="24" class="flex" style="height: 62px">
-			<div class="flex flexColumn iconItem" @click="addConnect">
-				<Connection class="btnIcon"/>
-				<div>
-					连接
-				</div>
-			</div>
-			<div class="flex flexColumn iconItem">
-				<Edit class="btnIcon"/>
-				<div>
-					查询
-				</div>
-			</div>
-		</el-col>
-		<el-col :span="6" class="height100">
-			<connect-tree ref="connectTree"></connect-tree>
-		</el-col>
-		<el-col :span="18" class="height100">
-			<right-window ref="rightWindow"></right-window>
-		</el-col>
-	</div>
-	<connect-dialog ref="connectDialog" @onReceiveMsg="connectData"></connect-dialog>
+    <menu-item class="width100 menuClass"></menu-item>
+    <div class="scroll width100">
+        <el-col :span="24" class="flex" style="height: 62px">
+            <div class="flex flexColumn iconItem" @click="addConnect">
+                <Connection class="btnIcon"/>
+                <div>
+                    连接
+                </div>
+            </div>
+            <div class="flex flexColumn iconItem">
+                <Edit class="btnIcon"/>
+                <div>
+                    查询
+                </div>
+            </div>
+        </el-col>
+        <el-col :span="24" class="flex height100">
+            <div class=" white" id="left-tree">
+                <connect-tree ref="connectTree"></connect-tree>
+                <div id="resize" class="resize" title="收缩侧边栏">⋮</div>
+            </div>
+            <div class="" id="right-content">
+                <right-window ref="rightWindow"></right-window>
+            </div>
+        </el-col>
+    </div>
+    <footer></footer>
+    <connect-dialog ref="connectDialog" @onReceiveMsg="connectData"></connect-dialog>
 </template>
 
 <style scoped>
+#left-tree {
+    width: 25%;
+    position: relative;
+    vertical-align: top;
+    display: inline-block;
+    box-sizing: border-box;
+    -ms-flex-negative: 0;
+    flex-shrink: 0;
+    height: 100%;
+}
+
+.resize {
+    cursor: col-resize;
+    position: absolute;
+    top: 50%;
+    transform: translate(0, -50%);
+    right: -8px;
+    background-color: #d6d6d6;
+    border-radius: 5px;
+    margin-top: -10px;
+    width: 10px;
+    height: 40px;
+    background-size: cover;
+    background-position: 50%;
+    font-size: 32px;
+    color: #fff;
+
+}
+
+.resize:hover {
+    background: #89cbff;
+}
+
+#right-content {
+    height: 100%;
+    width: 75%;
+    display: inline-block;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    vertical-align: top;
+    overflow: auto;
+}
+
+.white {
+    background: white;
+}
+
+footer {
+    height: 20px;
+    width: 100%;
+    background: #ccc;
+}
+
+.menuClass {
+    height: 60px;
+}
+
+.width100 {
+    width: 100%;
+}
+
 .height100 {
-	height:calc(100% - 62px);
+    height: calc(100% - 65px)
 }
 
 .btnIcon {
-	height: 2em;
-	font-size: 1em;
+    height: 2em;
+    font-size: 1em;
 }
 
 .iconItem {
-	width: 4em;
-	height: 4em;
-	padding: 0.2em 0.3em;
+    width: 4em;
+    height: 4em;
+    padding: 0.2em 0.3em;
 }
 
 .iconItem:hover {
-	background: #79bbff;
-	cursor: pointer;
+    background: #79bbff;
+    cursor: pointer;
 }
 
 .iconItem:hover div, .iconItem:hover .btnIcon {
-	color: white;
+    color: white;
 }
 
 .iconItem > div {
-	width: 100%;
-	font-size: 12px;
-	text-align: center;
+    width: 100%;
+    font-size: 12px;
+    text-align: center;
 }
 
 .flex {
-	display: flex;
+    display: flex;
 }
 
 .flexColumn {
-	flex-direction: column;
-	justify-content: center;
+    flex-direction: column;
+    justify-content: center;
 }
 
 
 .scroll {
-	overflow: scroll;
-	background-color: #F7F7F7;
-	display: flex;
-	flex-wrap: wrap;
-	height: 100%;
+    overflow: scroll;
+    background-color: #F7F7F7;
+    display: flex;
+    flex-wrap: wrap;
+    height: calc(100% - 80px);
 }
 
 </style>
