@@ -30,17 +30,20 @@ def error(msg="操作失败"):
 
 
 def convert(class_name: type, data):
+    other = {}
     if type(data) == dict and type(class_name) == type:
         new_class = class_name()
         for i in data:
             if hasattr(new_class, i):
                 setattr(new_class, i, data[i])
+            else:
+                other[i] = data[i]
         if hasattr(new_class, "after_init"):
             after_init = getattr(new_class, "after_init")
             after_init()
-        return new_class
+        return new_class,other
 
-    return data
+    return data, other
 
 
 def create_connect(connect: Connect):
@@ -51,3 +54,9 @@ def create_connect(connect: Connect):
         return db
     except Exception as err:
         raise Exception(err)
+
+
+def convert_type(data, tm):
+    if tm == "int":
+        return data
+    return "'" + data + "'"

@@ -24,29 +24,24 @@ onMounted(() => {
     setTimeout(() => {
         connectTree.value.refreshData()
     }, 1000)
-    console.log("index")
-    if (route.path !== '/' && route.path !== '/empty') {
-        store.commit('add_tabs', {route: '/empty', name: '对象'});
-        let nickNames = route.fullPath.split("nickName=")
-        let nickName;
-        if (nickNames.length == 1) {
-            nickName = route.name
-        } else {
-            nickName = nickNames[1]
-        }
-
-        store.commit('add_tabs', {route: route.fullPath, name: route.name, nickName: nickName});
-        store.commit('set_active_index', route.fullPath);
-    } else {
-
-        store.commit('add_tabs', {route: '/empty', name: '对象'});
-        store.commit('set_active_index', "/empty");
-        router.push('/empty');
+    if (route.path == "/") {
+        return
     }
+    let nickNames = route.fullPath.split("nickName=")
+    let nickName;
+    if (nickNames.length == 1) {
+        nickName = route.name
+    } else {
+        nickName = nickNames[1]
+    }
+    store.commit('add_tabs', {route: route.fullPath, name: route.name, nickName: nickName});
+    store.commit('set_active_index', route.fullPath);
     dragControllerDiv()
 });
 watch(router.currentRoute, (to) => {
-    console.log("watch")
+    if (route.path == "/") {
+        return
+    }
     let flag = false;
     for (let item of store.state.openTab) {
         if (item.route === to.fullPath) {
@@ -150,7 +145,7 @@ const addConnect = () => {
     position: absolute;
     top: 50%;
     transform: translate(0, -50%);
-    right: -8px;
+    right: -10px;
     background-color: #d6d6d6;
     border-radius: 5px;
     margin-top: -10px;
@@ -160,7 +155,7 @@ const addConnect = () => {
     background-position: 50%;
     font-size: 32px;
     color: #fff;
-
+    z-index: 999;
 }
 
 .resize:hover {
@@ -168,6 +163,7 @@ const addConnect = () => {
 }
 
 #right-content {
+    margin-left: 10px;
     height: 100%;
     width: 75%;
     display: inline-block;

@@ -59,6 +59,7 @@
     "appdmg": "^0.6.6"
   },
   "dependencies": {
+    "v-contextmenu": "^3.0.0",
     "vue-router": "^4.2.4",
     "vuex": "^4.1.0"
   }

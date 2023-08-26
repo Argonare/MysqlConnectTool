@@ -1,13 +1,12 @@
 <script setup lang="ts">
 
 import {ref} from "vue";
-import {TabPaneName} from "element-plus";
 import {useStore} from "vuex";
 import {useRouter} from "vue-router";
 
 const store = useStore()
 const router = useRouter()
-
+const panel = ref(null)
 const getPramData = (path) => {
     let param = {}
     if (path.indexOf("?") != -1) {
@@ -28,24 +27,28 @@ const tabClick = (tab) => {
 const tabRemove = (targetName) => {
     //首页不删
     console.log(222)
-    if (targetName == '/' || targetName == "/empty") {
-        return
-    }
+    // if (targetName == '/' || targetName == "/empty") {
+    //     return
+    // }
     store.commit('delete_tabs', targetName);
     if (store.state.activeIndex === targetName) {
         // 设置当前激活的路由
         if (store.state.openTab && store.state.openTab.length >= 1) {
-            let path=store.state.openTab[store.state.openTab.length - 1].route
+            let path = store.state.openTab[store.state.openTab.length - 1].route
             store.commit('set_active_index', path);
             let param = getPramData(path)
-            router.push({path: store.state.activeIndex,query: param});
+            router.push({path: store.state.activeIndex, query: param});
         } else {
             router.push({path: '/'});
         }
     }
 }
-
-
+const getData = () => {
+    panel.value.getData()
+}
+defineExpose({
+    getData
+})
 </script>
 
 <template>
@@ -56,7 +59,7 @@ const tabRemove = (targetName) => {
         @tab-click="tabClick"
         @tab-remove="tabRemove"
         v-if="store.state.openTab.length"
-        editable
+        :closable="true"
     >
         <el-tab-pane
             v-for="item in store.state.openTab"
@@ -65,7 +68,7 @@ const tabRemove = (targetName) => {
             :label="item.nickName"
             style="height:100%"
         >
-            <div style="height:100%">
+            <div style="height:100%" ref="panel">
                 <router-view/>
             </div>
         </el-tab-pane>
@@ -81,4 +84,7 @@ const tabRemove = (targetName) => {
     height: 100%;
 }
 
+/deep/ .el-tabs__header {
+    background: white;
+}
 </style>

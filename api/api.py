@@ -30,12 +30,13 @@ class API(System, Storage):
     def connect(func) -> object:
         @wraps(func)
         def decorate(self, data):
-            connect: Connect = convert(Connect, data)
+            connect, other = convert(Connect, data)
+
             if connect.name not in self.db_connect:
                 db = create_connect(connect)
             else:
                 db = self.db_connect[connect.name]
-            return func(self, connect, db)
+            return func(self, connect, db, other)
 
         return decorate
 
@@ -74,6 +75,7 @@ class API(System, Storage):
         with open(path, 'w', encoding="utf-8") as f:
             f.write(json.dumps(data))
         return success()
+
     def test_connect(self, data: Connect):
         connect: Connect = convert(Connect, data)
         db = create_connect(connect)
@@ -81,7 +83,7 @@ class API(System, Storage):
         return success()
 
     @connect
-    def get_database(self, data: Connect, db):
+    def get_database(self, data: Connect, db, other):
         cmd = "show databases"
         database: list = self.cursor_data(db, cmd)
         for i in database:
@@ -90,7 +92,7 @@ class API(System, Storage):
         return success(database)
 
     @connect
-    def get_table(self, data: Connect, db):
+    def get_table(self, data: Connect, db, other):
         cmd = "show tables"
         table: list = self.cursor_data(db, cmd)
         for i in table:
@@ -101,13 +103,34 @@ class API(System, Storage):
         return success(table)
 
     @connect
-    def get_data(self, data: Connect, db):
-        cmd = "select * from " + data.table + " limit 100"
+    def get_data(self, data: Connect, db, other):
+        page_size = other["pageSize"]  # 每页显示的记录数
+        current_page = other["currentPage"]  # 当前页码
+        start_position = (current_page - 1) * page_size
+        cmd = "select * from " + data.table + " limit " + str(start_position) + "," + str(page_size)
+        table_data = self.cursor_data(db, cmd)
+        cmd = "select count(1 ) as ct from " + data.table
+        ct = self.cursor_data(db, cmd)[0]["ct"]
+        return success({"list": table_data, "count": ct})
+
+    @connect
+    def desc_table(self, data: Connect, db, other):
+        cmd = "desc " + data.table
         table_data = self.cursor_data(db, cmd)
         return success(table_data)
 
     @connect
-    def desc_table(self, data: Connect, db):
-        cmd = "desc " + data.table
-        table_data = self.cursor_data(db, cmd)
-        return success(table_data)
+    def update_table(self, data: Connect, db, other):
+        cmd = ""
+        for i in data.updateData:
+            list = []
+            cmd += "update " + data.table + " set "
+            for j in data.updateData[i]:
+                if j == "primaryKey":
+                    continue
+                list.append(j + "=" + convert_type(data.updateData[i][j]["value"], data.updateData[i][j]["type"]))
+            cmd += ",".join(list) + " where " + data.updateData[i]["primaryKey"] + " = " + i + ";"
+        print(cmd)
+        self.cursor_data(db, cmd)
+        db.commit()
+        return success()

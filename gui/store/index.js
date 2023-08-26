@@ -2,7 +2,7 @@ import {useStore as baseUseStore, createStore} from 'vuex'
 
 export default createStore({
     state: {
-        openTab: [{route: '/empty', name: '对象',nickName:"对象"}],//所有打开的路由
+        openTab: [],//所有打开的路由
         activeIndex: '/empty', //也可以是默认激活路径；激活状态
         tableData:{}
     },

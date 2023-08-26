@@ -12,7 +12,6 @@ const tree = ref()
 let tmpData = []
 
 const getSavedData = () => {
-    console.log(111)
     return new Promise((resolve) => {
         proxy.$request("get_config", {}).then(data => {
             data.forEach(e => {
