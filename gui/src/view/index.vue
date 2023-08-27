@@ -27,17 +27,16 @@ onMounted(() => {
 		store.commit('add_tabs', {route: '/', name: '首页'});
 		store.commit('add_tabs', {route: route.path, name: route.name});
 		store.commit('set_active_index', route.path);
-	}
-	else {
-	// 	console.log('2');
-	// 	store.commit('add_tabs', {route: '/', name: '首页'});
-	// 	store.commit('set_active_index', "/");
-	// 	router.push('/');
+	} else {
+		// 	console.log('2');
+		// 	store.commit('add_tabs', {route: '/', name: '首页'});
+		// 	store.commit('set_active_index', "/");
+		// 	router.push('/');
 	}
 });
 watch(router.currentRoute, () => {
 	let flag = false;
-	for (let item of store._state.data.openTab) {
+	for (let item of store.state.openTab) {
 		console.log("item.name", item.name)
 		console.log("t0.name", route.name)
 
@@ -60,7 +59,16 @@ watch(router.currentRoute, () => {
 const addConnect = () => {
 	connectDialog.value.show()
 }
-
+const openEditor = () => {
+	let param = ""
+	// for (let i = store.state.openTab.length - 1; i <= 0; i--) {
+	// 	if (store.state.openTab[i].length>0 && store.state.openTab[i].indexOf("tableData") > 0) {
+	// 		param = store.state.openTab[i].split("?")[1]
+	// 		break
+	// 	}
+	// }
+	router.push({path: "/sqlEditor"})
+}
 </script>
 
 <template>
@@ -73,7 +81,7 @@ const addConnect = () => {
 					连接
 				</div>
 			</div>
-			<div class="flex flexColumn iconItem">
+			<div class="flex flexColumn iconItem" @click="openEditor">
 				<Edit class="btnIcon"/>
 				<div>
 					查询
@@ -92,7 +100,7 @@ const addConnect = () => {
 
 <style scoped>
 .height100 {
-	height:calc(100% - 62px);
+	height: calc(100% - 62px);
 }
 
 .btnIcon {

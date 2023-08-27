@@ -10,6 +10,11 @@ const routes = [
         name: "test",
         component: () => import(/* webpackChunkName: "about" */ "../components/menuItem.vue"),
     }
+    , {
+        path: "/sqlEditor",
+        name: "test",
+        component: () => import(/* webpackChunkName: "about" */ "../components/sqlEditor.vue"),
+    }
 ];
 
 const router = createRouter({
