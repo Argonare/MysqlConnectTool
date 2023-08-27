@@ -17,3 +17,4 @@ pyapp/spec/*
 *.sln
 *.sw?
 api/__pycache__
+test
