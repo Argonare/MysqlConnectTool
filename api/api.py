@@ -134,3 +134,23 @@ class API(System, Storage):
         self.cursor_data(db, cmd)
         db.commit()
         return success()
+
+    @connect
+    def exec_sql(self, data: connect, db, other):
+        cmd = other["sql"]
+
+        page_size = other["pageSize"]  # 每页显示的记录数
+        current_page = other["currentPage"]  # 当前页码
+        start_position = (current_page - 1) * page_size
+        count_cmd = "select count(1) as ct from (" + cmd + ") as t"
+        count_data = self.cursor_data(db, count_cmd)[0]["ct"]
+        if "limit" not in cmd:
+            cmd = cmd + " limit " + str(start_position) + "," + str(page_size)
+
+        table_data = self.cursor_data(db, cmd)
+        db.commit()
+
+        cmd = "desc " + data.table
+        table_column = self.cursor_data(db, cmd)
+
+        return success({"data": table_data, "column": table_column, "count": count_data})

@@ -135,7 +135,12 @@ defineExpose({
     getData
 })
 document.onkeydown = function (e) {
-    var evt = window.event || e;
+	 var evt = window.event || e;
+	if(route.path!="/DataTable"){
+		// evt.preventDefault();
+		return;
+	}
+
     var code = evt.keyCode || evt.which;
     console.log(code)
     if (code == 116) {
@@ -185,7 +190,6 @@ const rightClick = (row, column,cell, event) => {
 
             </template>
         </el-table-column>
-
     </el-table>
     <el-pagination
         background

@@ -4,7 +4,10 @@ export default createStore({
     state: {
         openTab: [],//所有打开的路由
         activeIndex: '/empty', //也可以是默认激活路径；激活状态
-        tableData:{}
+        tableData: {},
+        connectList: [],
+        lastConnect: null,
+        lastDatabase: {}
     },
     mutations: {
         // 添加tabs

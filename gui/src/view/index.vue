@@ -75,6 +75,7 @@ const dragControllerDiv = () => {
         // 鼠标拖动事件
         document.onmousemove = function (e) {
             let moveLen = line.left + (e.clientX - startX)
+	        console.log(moveLen)
             if (
                 moveLen >= document.body.clientWidth * 0.1 &&
                 moveLen <= document.body.clientWidth * 0.5
@@ -116,7 +117,7 @@ const openEditor = () => {
                     连接
                 </div>
             </div>
-            <div class="flex flexColumn iconItem">
+            <div class="flex flexColumn iconItem" @click="openEditor">
                 <Edit class="btnIcon"/>
                 <div>
                     查询
