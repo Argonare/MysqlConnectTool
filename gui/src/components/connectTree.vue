@@ -78,14 +78,14 @@ const handleNodeClick = (data: Tree) => {
 	setTimeout(function () {
 		if (clickNum === 2) {
 			if (data.level == 3) {
-				console.log("click")
+				console.log("点击了左侧菜单")
 				let connect_data = toRaw(tree.value.getNode(data.id).parent.parent.data)
 				store.state.lastConnect = connect_data
-				console.log(connect_data)
+				connect_data.database=data.databases
 				connect_data.table = data.name
 				connect_data.nickName = data.name
+				delete connect_data.sql
 				router.push({path: "/DataTable", query: connect_data})
-				// router.push({name: "表格数据", state : {data: JSON.stringify(connect_data)}})
 			}
 		}
 		clickNum = 0
@@ -111,12 +111,13 @@ const loadNode = (node: Node, resolve: (data: Tree[]) => void) => {
 		})
 	} else if (node.level === 2) {
 
-		let d = toRaw(node.parent.data)
+		let d = JSON.parse(JSON.stringify(toRaw(node.parent.data)))
 		d.database = node.data.name
 		proxy.$request("get_table", d).then(data => {
 			data.forEach(e => {
 				e = <Tree>e
 			})
+			console.log(data)
 			return resolve(data)
 		})
 	} else {

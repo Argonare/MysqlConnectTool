@@ -88,7 +88,6 @@ class API(System, Storage):
         database: list = self.cursor_data(db, cmd)
         for i in database:
             i["name"] = i["Database"]
-
         return success(database)
 
     @connect
@@ -100,6 +99,7 @@ class API(System, Storage):
             i["leaf"] = True
             i["level"] = 3
             i["id"] = str(uuid.uuid4())
+            i["databases"]=data.database
         return success(table)
 
     @connect

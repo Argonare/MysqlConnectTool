@@ -5,7 +5,7 @@ import ConnectDialog from "@/components/connectDialog.vue";
 import MenuItem from "@/components/menuItem.vue";
 import ConnectTree from "@/components/connectTree.vue";
 import RightWindow from "@/components/rightWindow.vue";
-
+import {getTargetUrlParam} from "@/assets/common.js"
 import {onBeforeRouteUpdate, useRoute, useRouter} from 'vue-router'
 
 import {useStore} from '@/../store'
@@ -21,9 +21,12 @@ const connectData = (params: Object) => {
     connectTree.value.addData(params)
 };
 onMounted(() => {
-    setTimeout(() => {
+
+	 window.addEventListener('pywebviewready', function() {
         connectTree.value.refreshData()
-    }, 1000)
+    })
+
+
     if (route.path == "/") {
         return
     }
@@ -52,13 +55,12 @@ watch(router.currentRoute, (to) => {
     }
 
     if (!flag) {
-        let nickNames = to.fullPath.split("nickName=")
-        let nickName;
-        if (nickNames.length == 1) {
+        let nickName =getTargetUrlParam(to.fullPath,"nickName")
+        if (nickName==null) {
             nickName = to.name
-        } else {
-            nickName = nickNames[1]
         }
+		console.log(to)
+	    console.log(nickName)
         store.commit('add_tabs', {route: to.fullPath, name: to.name, nickName: nickName});
         store.commit('set_active_index', to.fullPath);
     }
