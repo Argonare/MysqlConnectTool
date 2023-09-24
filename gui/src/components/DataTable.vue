@@ -9,6 +9,7 @@ const ht = ref(300)
 const tableColumn = reactive([])
 const tableData = ref([])
 const contextmenu = ref(null)
+const menuFlag = ref(null)
 
 let primaryKey = ""
 let oldValue = null
@@ -72,11 +73,11 @@ const iptBlur = (scope, e: any) => {
 			changedData = {}
 		}
 		let key = scope.column.label
-		if (changedData[scope.row[primaryKey]] == null) {
-			changedData[scope.row[primaryKey]] = {}
-			changedData[scope.row[primaryKey]]["primaryKey"] = primaryKey
+		if (changedData[scope.row["@uuid"]] == null) {
+			changedData[scope.row["@uuid"]] = {}
+			changedData[scope.row["@uuid"]]["primaryKey"] = primaryKey
 		}
-		changedData[scope.row[primaryKey]][key] = {value: newValue, type: field[scope.column.label].Type}
+		changedData[scope.row["@uuid"]][key] = {value: newValue, type: field[scope.column.label].Type}
 		e.target.parentElement.classList.add("changed")
 	}
 	console.log(changedData)
@@ -86,15 +87,15 @@ let editX = ref(null);
 let editY = ref(null);
 let chooseData = null
 const cellClick = (scope) => {
+	console.log("点击了" +  scope.$index + " " +scope.column.no)
 	chooseData = scope
 	oldValue = tableData.value[scope.$index][scope.column.label]
-	request_update(scope)
+	// request_update(scope)
 	editX.value = scope.$index
 	editY.value = scope.column.no
-	setTimeout(() => {
-		document.getElementById("ipt").focus()
-
-	})
+	// setTimeout(() => {
+	// 	document.getElementById("ipt").focus()
+	// })
 
 
 }
@@ -159,13 +160,45 @@ const globalClick = () => {
 }
 //type=1 菜单 2 单元格 3 index
 const rightClick = (row, column, cell, event, type = 2) => {
-	console.log(table.value.getSelectionRows())
+	console.log("点击了右键")
 	console.log(column)
 	console.log(type)
-	// editX.value = scope.$index
-	// editY.value = scope.column.no
+	console.log(row)
+	// menuFlag=line 右击了第一列的icon，操作一整行
+
+	if (column.no == 0) {
+		menuFlag.value = "line"
+	} else {
+		menuFlag.value = "cell"
+	}
 	rightClickItem.value = row
 }
+const rowClicked = () => {
+	menuFlag.value = true
+}
+const setEmpty = (flag) => {
+	console.log("点击了设置空白字符串" + flag)
+	let row = rightClickItem.value
+	for (let item in row) {
+		if (item == "@uuid") {
+			continue
+		}
+		row[item] = ""
+	}
+	rightClickItem.value = row
+}
+const setNull = (flag) => {
+	console.log("点击了设置null" + flag)
+	let row = rightClickItem.value
+	for (let item in row) {
+		if (item == "@uuid") {
+			continue
+		}
+		row[item] = null
+	}
+	rightClickItem.value = row
+}
+
 
 </script>
 
@@ -178,12 +211,14 @@ const rightClick = (row, column, cell, event, type = 2) => {
 	          @contextmenu="globalClick"
 	          :scrollbar-always-on="true" header-cell-class-name="headCell" cell-class-name="subCell">
 		<el-table-column label="" width="40px" align="center">
-          <template  #default="scope">
-            <div>
-              <el-icon><DArrowRight /></el-icon>
-            </div>
-          </template>
-        </el-table-column>
+			<template #default="scope">
+				<div @click="rowClicked">
+					<el-icon>
+						<DArrowRight/>
+					</el-icon>
+				</div>
+			</template>
+		</el-table-column>
 		<el-table-column v-for="item in tableColumn" :key="item.prop" :prop="item.prop" :label="item.label"
 
 		                 :width="flexWidth(item.label)" :min-width="0" :show-overflow-tooltip="true">
@@ -191,10 +226,12 @@ const rightClick = (row, column, cell, event, type = 2) => {
 				{{ item.label }}
 			</template>
 			<template #default="scope">
-				<input v-show="editX==scope.$index&& editY==scope.column.no"
-				       v-model="scope.row[item.prop]" id="ipt" class="ipt" autofocus="autofocus"
+
+				<input v-if="editX==scope.$index&& editY==scope.column.no"
+				       v-model="scope.row[item.prop]" id="ipt" class="ipt" v-focus
+				       :placeholder="scope.row[item.prop]==null?'NULL':''"
 				       @blur="iptBlur(scope, $event)"/>
-				<div class="iptDiv" v-show="!(editX==scope.$index&& editY==scope.column.no)"
+				<div class="iptDiv" v-else
 				     @click="cellClick(scope)">{{ scope.row[item.prop] }}
 				</div>
 
@@ -213,10 +250,17 @@ const rightClick = (row, column, cell, event, type = 2) => {
 		layout="total, sizes, prev, pager, next, jumper"
 	/>
 	<div v-show="rightClickItem !='' ">
-		<v-contextmenu ref="contextmenu">
+
+		<v-contextmenu ref="contextmenu" v-if="menuFlag=='line'">
+			<v-contextmenu-item @click="setEmpty(0)">设为空白字符串</v-contextmenu-item>
+			<v-contextmenu-item>设为null</v-contextmenu-item>
+			<v-contextmenu-item divider></v-contextmenu-item>
+			<v-contextmenu-item>删除记录</v-contextmenu-item>
+		</v-contextmenu>
+		<v-contextmenu ref="contextmenu" v-else>
 			<v-contextmenu-item>设为空白字符串</v-contextmenu-item>
 			<v-contextmenu-item>设为null</v-contextmenu-item>
-			<v-contextmenu-item>菜单3</v-contextmenu-item>
+			<v-contextmenu-item>{{ menuFlag == 'line' }}</v-contextmenu-item>
 		</v-contextmenu>
 	</div>
 </template>
@@ -251,6 +295,8 @@ const rightClick = (row, column, cell, event, type = 2) => {
 
 /deep/ .iptDiv {
 	padding: 0 5px;
+	width: 100%;
+	display: list-item;
 }
 
 /deep/ .ipt:hover {

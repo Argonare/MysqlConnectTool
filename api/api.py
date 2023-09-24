@@ -109,6 +109,8 @@ class API(System, Storage):
         start_position = (current_page - 1) * page_size
         cmd = "select * from " + data.table + " limit " + str(start_position) + "," + str(page_size)
         table_data = self.cursor_data(db, cmd)
+        for i in table_data:
+            i["@uuid"]=str(uuid.uuid4())
         cmd = "select count(1 ) as ct from " + data.table
         ct = self.cursor_data(db, cmd)[0]["ct"]
         return success({"list": table_data, "count": ct})

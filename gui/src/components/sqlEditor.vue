@@ -44,8 +44,7 @@ const changeActive = (data) => {
 
 if (store.state.lastConnect != null) {
 	let item = store.state.lastConnect
-
-	connect.value = item
+	connect.value = item.name
 	activeData = item
 	refreshDatabase(item)
 	database.value = item.database
@@ -92,7 +91,7 @@ const handleCurrentChange = (val: number) => {
 
 <template>
 	<div style="padding-bottom: 10px">
-		<el-select v-model="connect" class="m2" placeholder="Select"
+		<el-select v-model="connect" class="m2" placeholder="请选择数据库"
 		           :collapse-tags-tooltip="true" value-key="id" @change="refreshDatabase">
 			<el-option
 				v-for="item in connectList"

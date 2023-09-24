@@ -25,7 +25,7 @@ onMounted(() => {
 	 window.addEventListener('pywebviewready', function() {
         connectTree.value.refreshData()
     })
-
+	dragControllerDiv()
 
     if (route.path == "/") {
         return
@@ -39,7 +39,7 @@ onMounted(() => {
     }
     store.commit('add_tabs', {route: route.fullPath, name: route.name, nickName: nickName});
     store.commit('set_active_index', route.fullPath);
-    dragControllerDiv()
+
 });
 watch(router.currentRoute, (to) => {
     if (route.path == "/") {
@@ -77,7 +77,6 @@ const dragControllerDiv = () => {
         // 鼠标拖动事件
         document.onmousemove = function (e) {
             let moveLen = line.left + (e.clientX - startX)
-	        console.log(moveLen)
             if (
                 moveLen >= document.body.clientWidth * 0.1 &&
                 moveLen <= document.body.clientWidth * 0.5

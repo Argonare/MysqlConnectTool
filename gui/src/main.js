@@ -35,7 +35,14 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 
 app.component('SvgIcon', SvgIcon)
 
-
+app.directive('focus', {
+  // 当被绑定的元素插入到 DOM 中时……
+  mounted: function (el) {
+    // 聚焦元素
+      console.log(el)
+    el.focus()
+  }
+})
 app.config.globalProperties.$request = (func, data) => {
     return new Promise((resolve) => {
         window.pywebview.api[func](data).then((res) => {

@@ -18,10 +18,10 @@ const getPramData = (path) => {
     return param
 }
 const tabClick = (tab) => {
-    console.log("click")
+    console.log("点击了页签")
     let path = store.state.openTab[Number(tab.index)].route
     let param = getPramData(path)
-
+	store.state.lastConnect =param
     router.push({path: path, query: param});
 }
 const tabRemove = (targetName) => {
