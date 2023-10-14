@@ -42,7 +42,7 @@ const changeActive = (data) => {
 	activeData["database"] = database.value
 }
 
-if (store.state.lastConnect != null) {
+if (store.state.lastConnect != null&& JSON.stringify(store.state.lastConnect)!='{}') {
 	let item = store.state.lastConnect
 	connect.value = item.name
 	activeData = item

@@ -176,7 +176,7 @@ const openEditor = () => {
 #right-content {
     margin-left: 10px;
     height: 100%;
-    width: 75%;
+    width: 75% !important;
     display: inline-block;
     -webkit-box-sizing: border-box;
     box-sizing: border-box;

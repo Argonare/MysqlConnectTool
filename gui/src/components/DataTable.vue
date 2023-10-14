@@ -87,7 +87,7 @@ let editX = ref(null);
 let editY = ref(null);
 let chooseData = null
 const cellClick = (scope) => {
-	console.log("点击了" +  scope.$index + " " +scope.column.no)
+	console.log("点击了" + scope.$index + " " + scope.column.no)
 	chooseData = scope
 	oldValue = tableData.value[scope.$index][scope.column.label]
 	// request_update(scope)
@@ -172,6 +172,22 @@ const rightClick = (row, column, cell, event, type = 2) => {
 		menuFlag.value = "cell"
 	}
 	rightClickItem.value = row
+
+
+	let menu = document.querySelector("#menu");
+	let item=menu.parentElement.parentElement.parentElement.parentElement.parentElement
+	console.log(item.offsetLeft)
+	//阻止元素发生默认的行为
+	// event.preventDefault();
+	// 根据事件对象中鼠标点击的位置，进行定位
+	console.log(event)
+	menu.style.left = event.clientX-item.offsetLeft  + "px";
+	menu.style.top = event.clientY-item.offsetTop -70 + "px";
+	// 改变自定义菜单的隐藏与显示
+	menu.style.display = "block";
+	menu.style.zIndex = 1000;
+
+
 }
 const rowClicked = () => {
 	menuFlag.value = true
@@ -207,7 +223,7 @@ const setNull = (flag) => {
 	          :max-height="ht"
 	          @header-contextmenu=" (row, column,cell, event) =>rightClick(row, column,cell, event,1)"
 	          @cell-contextmenu="rightClick"
-	          v-contextmenu:contextmenu
+
 	          @contextmenu="globalClick"
 	          :scrollbar-always-on="true" header-cell-class-name="headCell" cell-class-name="subCell">
 		<el-table-column label="" width="40px" align="center">
@@ -249,23 +265,45 @@ const setNull = (flag) => {
 		@current-change="handleCurrentChange"
 		layout="total, sizes, prev, pager, next, jumper"
 	/>
-	<div v-show="rightClickItem !='' ">
-
-		<v-contextmenu ref="contextmenu" v-if="menuFlag=='line'">
-			<v-contextmenu-item @click="setEmpty(0)">设为空白字符串</v-contextmenu-item>
-			<v-contextmenu-item>设为null</v-contextmenu-item>
-			<v-contextmenu-item divider></v-contextmenu-item>
-			<v-contextmenu-item>删除记录</v-contextmenu-item>
-		</v-contextmenu>
-		<v-contextmenu ref="contextmenu" v-else>
-			<v-contextmenu-item>设为空白字符串</v-contextmenu-item>
-			<v-contextmenu-item>设为null</v-contextmenu-item>
-			<v-contextmenu-item>{{ menuFlag == 'line' }}</v-contextmenu-item>
-		</v-contextmenu>
+	<div v-show="rightClickItem !='' " id="menu" class="menuDiv">
+		<ul class="menuUl">
+			<li>aa</li>
+			<li>bb</li>
+		</ul>
 	</div>
 </template>
 
 <style scoped>
+.menuDiv {
+	display: none;
+	position: absolute;
+
+	.menuUl {
+		height: auto;
+		width: auto;
+		font-size: 14px;
+		text-align: left;
+		border-radius: 3px;
+		border: none;
+		background-color: #c4c4c4;
+		color: #fff;
+		list-style: none;
+		padding: 0 10px;
+
+		li {
+			width: 140px;
+			height: 35px;
+			line-height: 35px;
+			cursor: pointer;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.47);
+
+			&:hover {
+				background-color: rgb(26, 117, 158);
+				color: rgb(54, 138, 175);
+			}
+		}
+	}
+}
 
 .table {
 	width: 100%;
@@ -327,4 +365,6 @@ const setNull = (flag) => {
 	background: white;
 	padding: 5px 10px
 }
+
+
 </style>
