@@ -19,6 +19,9 @@ let pageSize = 100
 let currentPage = 1
 let count = 0
 let rightClickItem = ref("")
+let showMenu = ref(false)
+
+
 calHeight()
 onMounted(() => {
 	console.log(route.query)
@@ -160,10 +163,8 @@ const globalClick = () => {
 }
 //type=1 菜单 2 单元格 3 index
 const rightClick = (row, column, cell, event, type = 2) => {
+
 	console.log("点击了右键")
-	console.log(column)
-	console.log(type)
-	console.log(row)
 	// menuFlag=line 右击了第一列的icon，操作一整行
 
 	if (column.no == 0) {
@@ -173,21 +174,17 @@ const rightClick = (row, column, cell, event, type = 2) => {
 	}
 	rightClickItem.value = row
 
-
+}
+//设置菜单出现的位置
+const showMenuPosition = (event) => {
 	let menu = document.querySelector("#menu");
-	let item=menu.parentElement.parentElement.parentElement.parentElement.parentElement
-	console.log(item.offsetLeft)
-	//阻止元素发生默认的行为
-	// event.preventDefault();
-	// 根据事件对象中鼠标点击的位置，进行定位
-	console.log(event)
-	menu.style.left = event.clientX-item.offsetLeft  + "px";
-	menu.style.top = event.clientY-item.offsetTop -70 + "px";
+	let item = menu.parentElement.parentElement.parentElement.parentElement.parentElement
+	showMenu.value = true
+	menu.style.left = event.clientX - item.offsetLeft + "px";
+	menu.style.top = event.clientY - item.offsetTop - 50 + "px";
 	// 改变自定义菜单的隐藏与显示
 	menu.style.display = "block";
 	menu.style.zIndex = 1000;
-
-
 }
 const rowClicked = () => {
 	menuFlag.value = true
@@ -215,20 +212,60 @@ const setNull = (flag) => {
 	rightClickItem.value = row
 }
 
+document.addEventListener('click', e => {
+	showMenu.value = false
+})
+const clearSelected = () => {
+	selectedRow.value.clear()
+	selectedCell.value.clear()
+}
+//列全选右键
+const selectedRow = ref(new Set([]))
+const rowRightClick = (row, event, showMenu = false) => {
+	clearSelected()
+	document.getElementsByClassName("table")[0].classList.add("showTree")
+	selectedRow.value.add(row.$index)
+	if (showMenu) {
+		showMenuPosition(event)
+	}
+}
 
+const selectedRowClass = (arg) => {
+	if (selectedRow.value.has(arg.rowIndex)) {
+		return 'selectedRow'
+	}
+	return ''
+}
+//单元格右键
+const selectedCell = ref(new Set([]))
+const cellRightClick = (row, event, showMenu = false) => {
+	clearSelected()
+	document.getElementsByClassName("table")[0].classList.remove("showTree")
+	selectedCell.value.add(row.$index+","+row.cellIndex)
+	console.log(row)
+	if (showMenu) {
+		showMenuPosition(event)
+	}
+}
+const selectedCellClass=({ row, column, rowIndex, columnIndex })=>{
+	if(selectedCell.value.has(rowIndex+","+columnIndex)){
+		return 'selectedRow subCell'
+	}
+	return 'subCell'
+}
 </script>
 
 <template>
 	<el-table :data="tableData" border class="table" ref="table" :fit="true" table-layout='auto'
 	          :max-height="ht"
 	          @header-contextmenu=" (row, column,cell, event) =>rightClick(row, column,cell, event,1)"
-	          @cell-contextmenu="rightClick"
-
 	          @contextmenu="globalClick"
-	          :scrollbar-always-on="true" header-cell-class-name="headCell" cell-class-name="subCell">
+	          :row-class-name="selectedRowClass"
+	          :scrollbar-always-on="true" header-cell-class-name="headCell" :cell-class-name="selectedCellClass">
 		<el-table-column label="" width="40px" align="center">
 			<template #default="scope">
-				<div @click="rowClicked">
+				<div @click="rowRightClick(scope,null)"
+				     @click.right="(event)=>rowRightClick(scope,event,true)">
 					<el-icon>
 						<DArrowRight/>
 					</el-icon>
@@ -236,7 +273,6 @@ const setNull = (flag) => {
 			</template>
 		</el-table-column>
 		<el-table-column v-for="item in tableColumn" :key="item.prop" :prop="item.prop" :label="item.label"
-
 		                 :width="flexWidth(item.label)" :min-width="0" :show-overflow-tooltip="true">
 			<template #header>
 				{{ item.label }}
@@ -248,6 +284,7 @@ const setNull = (flag) => {
 				       :placeholder="scope.row[item.prop]==null?'NULL':''"
 				       @blur="iptBlur(scope, $event)"/>
 				<div class="iptDiv" v-else
+				     @click.right="(event)=>cellRightClick(scope,event,true)"
 				     @click="cellClick(scope)">{{ scope.row[item.prop] }}
 				</div>
 
@@ -265,49 +302,67 @@ const setNull = (flag) => {
 		@current-change="handleCurrentChange"
 		layout="total, sizes, prev, pager, next, jumper"
 	/>
-	<div v-show="rightClickItem !='' " id="menu" class="menuDiv">
-		<ul class="menuUl">
-			<li>aa</li>
-			<li>bb</li>
-		</ul>
+	<div v-show="showMenu" id="menu" class="menuDiv">
+		<div class="menuUl">
+			<p @click="setEmpty">设置为空白字符串</p>
+			<p>设置为 NULL</p>
+			<el-divider/>
+			<p>删除</p>
+		</div>
 	</div>
 </template>
 
 <style scoped>
-.menuDiv {
-	display: none;
+
+/deep/  tr:hover > td {
+	background-color: unset  !important;
+}
+/deep/  tr:hover > td.selectedRow {
+	background: #409EFF !important;
+}
+/deep/ .selectedRow {
+	background: #409EFF !important;
+	color: white;
+}
+
+#menu {
 	position: absolute;
 
+	.menuUl > p {
+		margin: 0;
+		cursor: pointer;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.47);
+		padding: 5px 1.5em;
+		font-size: 12px;
+
+		&:hover {
+			background-color: #eee;
+		}
+	}
+
 	.menuUl {
+		min-width: 70px;
 		height: auto;
-		width: auto;
 		font-size: 14px;
 		text-align: left;
 		border-radius: 3px;
-		border: none;
-		background-color: #c4c4c4;
-		color: #fff;
+		background-color: #fff;
+		color: black;
 		list-style: none;
-		padding: 0 10px;
+		border: 1px solid #ccc;
+		padding: 0;
 
-		li {
-			width: 140px;
-			height: 35px;
-			line-height: 35px;
-			cursor: pointer;
-			border-bottom: 1px solid rgba(255, 255, 255, 0.47);
-
-			&:hover {
-				background-color: rgb(26, 117, 158);
-				color: rgb(54, 138, 175);
-			}
-		}
 	}
 }
 
 .table {
 	width: 100%;
 	height: 100%;
+}
+
+/deep/ .el-divider {
+	margin: 5px 0;
+	width: auto;
 }
 
 /deep/ .changed {
