@@ -20,8 +20,8 @@ let currentPage = 1
 let count = 0
 let rightClickItem = ref("")
 let showMenu = ref(false)
-
-
+let mode = ""
+let modeData = null
 calHeight()
 onMounted(() => {
 	console.log(route.query)
@@ -96,10 +96,6 @@ const cellClick = (scope) => {
 	// request_update(scope)
 	editX.value = scope.$index
 	editY.value = scope.column.no
-	// setTimeout(() => {
-	// 	document.getElementById("ipt").focus()
-	// })
-
 
 }
 const request_update = (scope) => {
@@ -114,7 +110,6 @@ const request_update = (scope) => {
 				dom[i].classList.remove("changed")
 			}
 		},)
-
 		changedData = null
 	}
 }
@@ -126,12 +121,10 @@ function calHeight() {
 }
 
 const handleSizeChange = (val: number) => {
-	console.log("handleSizeChange", val);
 	pageSize = val;
 	getData()
 }
 const handleCurrentChange = (val: number) => {
-	console.log(`current page: ${val}`);
 	currentPage = val;
 	getData()
 }
@@ -161,56 +154,43 @@ document.onkeydown = function (e) {
 const globalClick = () => {
 
 }
-//type=1 菜单 2 单元格 3 index
-const rightClick = (row, column, cell, event, type = 2) => {
-
-	console.log("点击了右键")
-	// menuFlag=line 右击了第一列的icon，操作一整行
-
-	if (column.no == 0) {
-		menuFlag.value = "line"
-	} else {
-		menuFlag.value = "cell"
-	}
-	rightClickItem.value = row
-
-}
 //设置菜单出现的位置
 const showMenuPosition = (event) => {
 	let menu = document.querySelector("#menu");
 	let item = menu.parentElement.parentElement.parentElement.parentElement.parentElement
 	showMenu.value = true
 	menu.style.left = event.clientX - item.offsetLeft + "px";
-	menu.style.top = event.clientY - item.offsetTop - 50 + "px";
+	menu.style.top = event.clientY - item.offsetTop - 54 + "px";
 	// 改变自定义菜单的隐藏与显示
 	menu.style.display = "block";
 	menu.style.zIndex = 1000;
 }
-const rowClicked = () => {
-	menuFlag.value = true
+const setMenu = (str) => {
+	if (mode == "row") {
+		for (let i in modeData.row) {
+			if (i == "@uuid") {
+				continue
+			}
+			modeData.row[i] = str
+		}
+	} else if (mode == "column") {
+		tableData.value.forEach(e => {
+			e[modeData.property] = str
+		})
+	} else if (mode == "cell") {
+		modeData.row[modeData.column.property] = str
+	}
 }
 const setEmpty = (flag) => {
-	console.log("点击了设置空白字符串" + flag)
-	let row = rightClickItem.value
-	for (let item in row) {
-		if (item == "@uuid") {
-			continue
-		}
-		row[item] = ""
-	}
-	rightClickItem.value = row
+	console.log(mode + " 点击了设置空白字符串")
+	console.log(modeData)
+	setMenu("")
 }
 const setNull = (flag) => {
-	console.log("点击了设置null" + flag)
-	let row = rightClickItem.value
-	for (let item in row) {
-		if (item == "@uuid") {
-			continue
-		}
-		row[item] = null
-	}
-	rightClickItem.value = row
+	console.log(mode + " 点击了设置null")
+	setMenu(null)
 }
+
 
 document.addEventListener('click', e => {
 	showMenu.value = false
@@ -218,14 +198,17 @@ document.addEventListener('click', e => {
 const clearSelected = () => {
 	selectedRow.value.clear()
 	selectedCell.value.clear()
+	selectedHeader.value.clear()
 }
-//列全选右键
+//行全选右键
 const selectedRow = ref(new Set([]))
 const rowRightClick = (row, event, showMenu = false) => {
 	clearSelected()
 	document.getElementsByClassName("table")[0].classList.add("showTree")
 	selectedRow.value.add(row.$index)
 	if (showMenu) {
+		mode = "row"
+		modeData = row
 		showMenuPosition(event)
 	}
 }
@@ -241,27 +224,50 @@ const selectedCell = ref(new Set([]))
 const cellRightClick = (row, event, showMenu = false) => {
 	clearSelected()
 	document.getElementsByClassName("table")[0].classList.remove("showTree")
-	selectedCell.value.add(row.$index+","+row.cellIndex)
-	console.log(row)
+	selectedCell.value.add(row.$index + "," + row.cellIndex)
 	if (showMenu) {
+		mode = "cell"
+		modeData = row
 		showMenuPosition(event)
 	}
 }
-const selectedCellClass=({ row, column, rowIndex, columnIndex })=>{
-	if(selectedCell.value.has(rowIndex+","+columnIndex)){
+const selectedCellClass = ({row, column, rowIndex, columnIndex}) => {
+	if (selectedHeader.value.has(columnIndex) && columnIndex != 0) {
+		return 'selectedRow subCell'
+	}
+
+	if (selectedCell.value.has(rowIndex + "," + columnIndex)) {
 		return 'selectedRow subCell'
 	}
 	return 'subCell'
+}
+const selectedHeader = ref(new Set([]))
+const HeaderRightClick = (column, event, showMenu = false) => {
+	clearSelected()
+	document.getElementsByClassName("table")[0].classList.remove("showTree")
+	selectedHeader.value.add(column.no)
+	if (showMenu && column.no != 0) {
+		mode = "column"
+		modeData = column
+		showMenuPosition(event)
+	}
+}
+const selectedHeaderClass = ({row, column, rowIndex, columnIndex}) => {
+	if (selectedHeader.value.has(columnIndex) && columnIndex != 0) {
+		return 'selectedRow headerCell'
+	}
+	return 'headerCell'
 }
 </script>
 
 <template>
 	<el-table :data="tableData" border class="table" ref="table" :fit="true" table-layout='auto'
 	          :max-height="ht"
-	          @header-contextmenu=" (row, column,cell, event) =>rightClick(row, column,cell, event,1)"
+	          @header-contextmenu=" ( column, event) =>HeaderRightClick(column, event,true)"
 	          @contextmenu="globalClick"
 	          :row-class-name="selectedRowClass"
-	          :scrollbar-always-on="true" header-cell-class-name="headCell" :cell-class-name="selectedCellClass">
+	          :scrollbar-always-on="true" :header-cell-class-name="selectedHeaderClass"
+	          :cell-class-name="selectedCellClass">
 		<el-table-column label="" width="40px" align="center">
 			<template #default="scope">
 				<div @click="rowRightClick(scope,null)"
@@ -278,14 +284,13 @@ const selectedCellClass=({ row, column, rowIndex, columnIndex })=>{
 				{{ item.label }}
 			</template>
 			<template #default="scope">
-
 				<input v-if="editX==scope.$index&& editY==scope.column.no"
 				       v-model="scope.row[item.prop]" id="ipt" class="ipt" v-focus
 				       :placeholder="scope.row[item.prop]==null?'NULL':''"
 				       @blur="iptBlur(scope, $event)"/>
-				<div class="iptDiv" v-else
+				<div class="iptDiv" v-else :class="scope.row[item.prop]==null?'nullDiv':''"
 				     @click.right="(event)=>cellRightClick(scope,event,true)"
-				     @click="cellClick(scope)">{{ scope.row[item.prop] }}
+				     @click="cellClick(scope)">{{ scope.row[item.prop] ?? 'NULL' }}
 				</div>
 
 			</template>
@@ -305,7 +310,7 @@ const selectedCellClass=({ row, column, rowIndex, columnIndex })=>{
 	<div v-show="showMenu" id="menu" class="menuDiv">
 		<div class="menuUl">
 			<p @click="setEmpty">设置为空白字符串</p>
-			<p>设置为 NULL</p>
+			<p @click="setNull">设置为 NULL</p>
 			<el-divider/>
 			<p>删除</p>
 		</div>
@@ -314,15 +319,21 @@ const selectedCellClass=({ row, column, rowIndex, columnIndex })=>{
 
 <style scoped>
 
-/deep/  tr:hover > td {
-	background-color: unset  !important;
+/deep/ tr:hover > td {
+	background-color: unset !important;
 }
-/deep/  tr:hover > td.selectedRow {
+
+/deep/ tr:hover > td.selectedRow {
 	background: #409EFF !important;
 }
+
 /deep/ .selectedRow {
 	background: #409EFF !important;
 	color: white;
+}
+
+.nullDiv {
+	opacity: 0.5;
 }
 
 #menu {
