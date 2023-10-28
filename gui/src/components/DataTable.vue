@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {useRoute} from "vue-router";
 import {getCurrentInstance, nextTick, onMounted, reactive, ref, toRaw} from "vue";
+import {Check, Close} from "@element-plus/icons-vue";
 
 const {proxy}: any = getCurrentInstance();
 const route = useRoute();
@@ -8,23 +9,22 @@ const table = ref()
 const ht = ref(300)
 const tableColumn = reactive([])
 const tableData = ref([])
-const contextmenu = ref(null)
-const menuFlag = ref(null)
+const showMenu = ref(false)
+const changedFlag = ref(0)
 
+let oldData = []
 let primaryKey = ""
 let oldValue = null
-let changedData = null
+let changedData = {}
 let field = {}
 let pageSize = 100
 let currentPage = 1
-let count = 0
-let rightClickItem = ref("")
-let showMenu = ref(false)
+let count: number = 0
 let mode = ""
 let modeData = null
-calHeight()
-onMounted(() => {
-	console.log(route.query)
+
+
+nextTick(() => {
 	proxy.$request("desc_table", route.query).then(data => {
 		let tableDesc = []
 		data.forEach(e => {
@@ -34,19 +34,20 @@ onMounted(() => {
 			field[e.Field] = e
 			tableColumn.push({prop: e.Field, label: e.Field})
 		})
-		console.log(field)
 	})
 	getData()
 
 })
+calHeight()
 const getData = () => {
+	console.log("获取数据")
 	let param = JSON.parse(JSON.stringify(route.query))
 	param.pageSize = pageSize
 	param.currentPage = currentPage
 	proxy.$request("get_data", param).then(data => {
 		tableData.value = data.list
+		oldData = JSON.parse(JSON.stringify(data.list))
 		count = data.count
-		console.log(data)
 	})
 }
 const flexWidth = (title, fontSize = 16) => {
@@ -65,54 +66,26 @@ const flexWidth = (title, fontSize = 16) => {
 	return trueWidth + 24;
 }
 
-
 const iptBlur = (scope, e: any) => {
 	// 输入框失焦之后，背景颜色变为粉色
-
 	let newValue = scope.row[scope.column.label]
 	//判断是否修改
 	if (oldValue != newValue) {
-		if (changedData == null) {
-			changedData = {}
-		}
-		let key = scope.column.label
-		if (changedData[scope.row["@uuid"]] == null) {
-			changedData[scope.row["@uuid"]] = {}
-			changedData[scope.row["@uuid"]]["primaryKey"] = primaryKey
-		}
-		changedData[scope.row["@uuid"]][key] = {value: newValue, type: field[scope.column.label].Type}
 		e.target.parentElement.classList.add("changed")
+		changedFlag.value = 1
 	}
-	console.log(changedData)
 }
 
 let editX = ref(null);
 let editY = ref(null);
 let chooseData = null
 const cellClick = (scope) => {
-	console.log("点击了" + scope.$index + " " + scope.column.no)
 	chooseData = scope
 	oldValue = tableData.value[scope.$index][scope.column.label]
-	// request_update(scope)
 	editX.value = scope.$index
 	editY.value = scope.column.no
-
 }
-const request_update = (scope) => {
-	//判断是否同一行，不是同一行更新
-	if (editX.value != null && editX.value != scope.$index && changedData != null) {
-		proxy.$request("update_table", Object.assign({}, route.query, {updateData: changedData})).then(data => {
 
-		})
-		setTimeout(() => {
-			let dom = document.querySelectorAll(".changed")
-			for (let i = 0; i < dom.length; i++) {
-				dom[i].classList.remove("changed")
-			}
-		},)
-		changedData = null
-	}
-}
 
 function calHeight() {
 	nextTick(() => {
@@ -133,37 +106,29 @@ defineExpose({
 	getData
 })
 document.onkeydown = function (e) {
-	var evt = window.event || e;
 	if (route.path != "/DataTable") {
 		// evt.preventDefault();
 		return;
 	}
 
-	var code = evt.keyCode || evt.which;
-	console.log(code)
+	let code = e.keyCode || e.which;
 	if (code == 116) {
-		if (evt.preventDefault) {
-			evt.preventDefault();
+		if (e.preventDefault) {
+			e.preventDefault();
 			getData()
-		} else {
-			evt.keyCode = 0;
-			evt.returnValue = false
 		}
 	}
-}
-const globalClick = () => {
-
 }
 //设置菜单出现的位置
 const showMenuPosition = (event) => {
 	let menu = document.querySelector("#menu");
 	let item = menu.parentElement.parentElement.parentElement.parentElement.parentElement
 	showMenu.value = true
-	menu.style.left = event.clientX - item.offsetLeft + "px";
-	menu.style.top = event.clientY - item.offsetTop - 54 + "px";
+	menu["style"].left = event.clientX - item.offsetLeft + "px";
+	menu["style"].top = event.clientY - item.offsetTop - 54 + "px";
 	// 改变自定义菜单的隐藏与显示
-	menu.style.display = "block";
-	menu.style.zIndex = 1000;
+	menu["style"].display = "block";
+	menu["style"].zIndex = 1000;
 }
 const setMenu = (str) => {
 	if (mode == "row") {
@@ -183,11 +148,12 @@ const setMenu = (str) => {
 }
 const setEmpty = (flag) => {
 	console.log(mode + " 点击了设置空白字符串")
-	console.log(modeData)
+	changedFlag.value = 1
 	setMenu("")
 }
 const setNull = (flag) => {
 	console.log(mode + " 点击了设置null")
+	changedFlag.value = 1
 	setMenu(null)
 }
 
@@ -258,13 +224,59 @@ const selectedHeaderClass = ({row, column, rowIndex, columnIndex}) => {
 	}
 	return 'headerCell'
 }
+//清空修改
+const clearChange = () => {
+	console.log("点击了清空")
+	changedFlag.value = 0
+	tableData.value = JSON.parse(JSON.stringify(oldData))
+	changedData = {}
+	document.querySelectorAll(".changed").forEach(e => {
+		e.classList.remove("changed")
+	})
+}
+//应用修改
+//TODO 删除判断
+const changeApply = () => {
+	console.log("点击了应用")
+	let d = {}
+
+	tableData.value.forEach(e => {
+		d[e["@uuid"]] = e
+	})
+	oldData.forEach(e => {
+		let item = d[e['@uuid']]
+		let res = {primaryKey: primaryKey}
+		let flag = 0
+		if (item == null) {
+			//添加的数据
+			return;
+		}
+		for (let i in e) {
+			if (i == "@uuid") continue;
+			if (item[i] != e[i]) {
+				res[i] = {value: item[i], type: field[i].Type}
+				flag = 1
+			}
+		}
+		if (flag == 1) {
+			changedData[e['@uuid']] = res
+		}
+	})
+	proxy.$request("update_table", Object.assign({}, route.query, {updateData: changedData})).then(() => {
+		document.querySelectorAll(".changed").forEach(e => {
+			e.classList.remove("changed")
+		})
+	})
+	console.log(changedData)
+}
+
 </script>
 
 <template>
 	<el-table :data="tableData" border class="table" ref="table" :fit="true" table-layout='auto'
 	          :max-height="ht"
 	          @header-contextmenu=" ( column, event) =>HeaderRightClick(column, event,true)"
-	          @contextmenu="globalClick"
+	          @contextmenu="()=>{}"
 	          :row-class-name="selectedRowClass"
 	          :scrollbar-always-on="true" :header-cell-class-name="selectedHeaderClass"
 	          :cell-class-name="selectedCellClass">
@@ -290,23 +302,29 @@ const selectedHeaderClass = ({row, column, rowIndex, columnIndex}) => {
 				       @blur="iptBlur(scope, $event)"/>
 				<div class="iptDiv" v-else :class="scope.row[item.prop]==null?'nullDiv':''"
 				     @click.right="(event)=>cellRightClick(scope,event,true)"
-				     @click="cellClick(scope)">{{ scope.row[item.prop] ?? 'NULL' }}
+				     @click="cellClick(scope)">{{ scope.row[item?.prop] ?? 'NULL' }}
 				</div>
 
 			</template>
 		</el-table-column>
 	</el-table>
-	<el-pagination
-		background
-		class="pagination"
-		:total="parseInt(count)"
-		v-model:page-size="pageSize"
-		v-model:current-page="currentPage"
-		:page-sizes="[10, 30, 50, 100]"
-		@size-change="handleSizeChange"
-		@current-change="handleCurrentChange"
-		layout="total, sizes, prev, pager, next, jumper"
-	/>
+	<div class="flexBottom">
+		<el-pagination
+			background
+			class="pagination"
+			:total="count"
+			v-model:page-size="pageSize"
+			v-model:current-page="currentPage"
+			@size-change="handleSizeChange"
+			@current-change="handleCurrentChange"
+			layout="total, prev, pager, next"
+		/>
+		<div class="bottomCheck">
+			<el-button type="primary" :icon="Check" :disabled="changedFlag==0" @click="changeApply">应用</el-button>
+			<el-button :icon="Close" :disabled="changedFlag==0" @click="clearChange">取消</el-button>
+		</div>
+
+	</div>
 	<div v-show="showMenu" id="menu" class="menuDiv">
 		<div class="menuUl">
 			<p @click="setEmpty">设置为空白字符串</p>
@@ -318,6 +336,24 @@ const selectedHeaderClass = ({row, column, rowIndex, columnIndex}) => {
 </template>
 
 <style scoped>
+.flexBottom {
+	display: flex;
+
+}
+
+.bottomCheck {
+	background: white;
+	display: flex;
+	padding-right: 1em;
+}
+
+.bottomCheck .el-button:first-child {
+	margin-left: 1.5em;
+}
+
+.bottomCheck .el-button {
+	align-self: center;
+}
 
 /deep/ tr:hover > td {
 	background-color: unset !important;
@@ -425,9 +461,7 @@ const selectedHeaderClass = ({row, column, rowIndex, columnIndex}) => {
 }
 
 .el-pagination {
-	float: right;
 	width: 100%;
-	justify-content: right;
 	background: white;
 	padding: 5px 10px
 }
