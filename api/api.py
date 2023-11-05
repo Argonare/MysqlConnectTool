@@ -42,6 +42,7 @@ class API(System, Storage):
 
     def cursor_data(self, db, cmd):
         cursor = db.cursor()
+        print(cmd)
         cursor.execute(cmd)
         data: list = cursor.fetchall()
         return data
@@ -99,7 +100,7 @@ class API(System, Storage):
             i["leaf"] = True
             i["level"] = 3
             i["id"] = str(uuid.uuid4())
-            i["databases"]=data.database
+            i["databases"] = data.database
         return success(table)
 
     @connect
@@ -110,8 +111,8 @@ class API(System, Storage):
         cmd = "select * from " + data.table + " limit " + str(start_position) + "," + str(page_size)
         table_data = self.cursor_data(db, cmd)
         for i in table_data:
-            i["@uuid"]=str(uuid.uuid4())
-        cmd = "select count(1 ) as ct from " + data.table
+            i["@uuid"] = str(uuid.uuid4())
+        cmd = "select count(1) as ct from " + data.table
         ct = self.cursor_data(db, cmd)[0]["ct"]
         return success({"list": table_data, "count": ct})
 
@@ -138,7 +139,7 @@ class API(System, Storage):
         return success()
 
     @connect
-    def exec_sql(self, data: connect, db, other):
+    def exec_sql(self, data: Connect, db, other):
         cmd = other["sql"]
 
         page_size = other["pageSize"]  # 每页显示的记录数
@@ -156,3 +157,12 @@ class API(System, Storage):
         table_column = self.cursor_data(db, cmd)
 
         return success({"data": table_data, "column": table_column, "count": count_data})
+
+    @connect
+    def delete_sql(self, data: Connect, db, other):
+        if "ids" not in other:
+            return error("未选中数据")
+        cmd = "delete from {0} where {1} in ({2})".format(data.table, other["primaryKey"], ",".join(other["ids"]))
+        self.cursor_data(db, cmd)
+        db.commit()
+        return success()

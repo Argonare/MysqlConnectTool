@@ -57,6 +57,9 @@ def create_connect(connect: Connect):
 
 
 def convert_type(data, tm):
+    if data is None:
+        return "null"
     if tm == "int":
         return data
+
     return "'" + data + "'"

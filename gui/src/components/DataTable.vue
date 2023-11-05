@@ -2,6 +2,7 @@
 import {useRoute} from "vue-router";
 import {getCurrentInstance, nextTick, onMounted, reactive, ref, toRaw} from "vue";
 import {Check, Close} from "@element-plus/icons-vue";
+import {ElMessage, ElMessageBox} from "element-plus";
 
 const {proxy}: any = getCurrentInstance();
 const route = useRoute();
@@ -13,6 +14,7 @@ const showMenu = ref(false)
 const changedFlag = ref(0)
 
 let oldData = []
+let oldDataMap = {}
 let primaryKey = ""
 let oldValue = null
 let changedData = {}
@@ -47,6 +49,10 @@ const getData = () => {
 	proxy.$request("get_data", param).then(data => {
 		tableData.value = data.list
 		oldData = JSON.parse(JSON.stringify(data.list))
+		oldData.forEach(e => {
+			oldDataMap[e["@uuid"]] = e
+		})
+
 		count = data.count
 	})
 }
@@ -133,16 +139,24 @@ const showMenuPosition = (event) => {
 const setMenu = (str) => {
 	if (mode == "row") {
 		for (let i in modeData.row) {
-			if (i == "@uuid") {
+			if (i == "@uuid" || (i == primaryKey && (str == null || str == ""))) {
 				continue
 			}
 			modeData.row[i] = str
 		}
 	} else if (mode == "column") {
+		if (modeData.property == primaryKey && (str == null || str == "")) {
+			ElMessage.error("主键不允许设空")
+			return
+		}
 		tableData.value.forEach(e => {
 			e[modeData.property] = str
 		})
 	} else if (mode == "cell") {
+		if ((str == null || str == "") && modeData.column.property == primaryKey) {
+			ElMessage.error("主键不允许设空")
+			return
+		}
 		modeData.row[modeData.column.property] = str
 	}
 }
@@ -234,6 +248,25 @@ const clearChange = () => {
 		e.classList.remove("changed")
 	})
 }
+
+const deleteLine = () => {
+	console.log("删除一行")
+	ElMessageBox.confirm("是否删除选中数据？", "警告", {
+		confirmButtonText: '确定',
+		cancelButtonText: '取消',
+		type: 'warning',
+	}).then(() => {
+		let param = JSON.parse(JSON.stringify(route.query))
+		param["primaryKey"] = primaryKey
+		param["ids"] = [modeData["row"][primaryKey] + ""]
+		proxy.$request("delete_sql", param).then(data => {
+			ElMessage.success("操作成功")
+			getData()
+		})
+	})
+
+
+}
 //应用修改
 //TODO 删除判断
 const changeApply = () => {
@@ -259,7 +292,7 @@ const changeApply = () => {
 			}
 		}
 		if (flag == 1) {
-			changedData[e['@uuid']] = res
+			changedData[oldDataMap[e['@uuid']][primaryKey]] = res
 		}
 	})
 	proxy.$request("update_table", Object.assign({}, route.query, {updateData: changedData})).then(() => {
@@ -323,14 +356,13 @@ const changeApply = () => {
 			<el-button type="primary" :icon="Check" :disabled="changedFlag==0" @click="changeApply">应用</el-button>
 			<el-button :icon="Close" :disabled="changedFlag==0" @click="clearChange">取消</el-button>
 		</div>
-
 	</div>
 	<div v-show="showMenu" id="menu" class="menuDiv">
 		<div class="menuUl">
 			<p @click="setEmpty">设置为空白字符串</p>
 			<p @click="setNull">设置为 NULL</p>
 			<el-divider/>
-			<p>删除</p>
+			<p @click="deleteLine" v-if="mode=='row'">删除 记录</p>
 		</div>
 	</div>
 </template>
