@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import {useRoute} from "vue-router";
-import {getCurrentInstance, nextTick, onMounted, reactive, ref, toRaw} from "vue";
-import {Check, Close} from "@element-plus/icons-vue";
+import {computed, getCurrentInstance, nextTick, onMounted, reactive, ref, toRaw} from "vue";
+import {Check, Close, Filter, Switch} from "@element-plus/icons-vue";
 import {ElMessage, ElMessageBox} from "element-plus";
+import {empty, emptyDefault} from '@/js/common'
 
 const {proxy}: any = getCurrentInstance();
 const route = useRoute();
@@ -12,7 +13,7 @@ const tableColumn = reactive([])
 const tableData = ref([])
 const showMenu = ref(false)
 const changedFlag = ref(0)
-
+const headerType = ref("en")
 let oldData = []
 let oldDataMap = {}
 let primaryKey = ""
@@ -22,25 +23,31 @@ let field = {}
 let pageSize = 100
 let currentPage = 1
 let count: number = 0
-let mode = ""
+let mode = ref("")
 let modeData = null
 
 
 nextTick(() => {
 	proxy.$request("desc_table", route.query).then(data => {
+		console.log(data)
 		let tableDesc = []
 		data.forEach(e => {
 			if (e.Key != "") {
 				primaryKey = e.Field
 			}
 			field[e.Field] = e
-			tableColumn.push({prop: e.Field, label: e.Field})
+			tableColumn.push({prop: e.Field, label: e.Field, comment: emptyDefault(e.Comment), hideFlag: false})
 		})
 	})
 	getData()
 
 })
 calHeight()
+
+const changeHeader = () => {
+	headerType.value = headerType.value == 'en' ? "cn" : "en"
+}
+
 const getData = () => {
 	console.log("获取数据")
 	let param = JSON.parse(JSON.stringify(route.query))
@@ -95,7 +102,7 @@ const cellClick = (scope) => {
 
 function calHeight() {
 	nextTick(() => {
-		ht.value = document.querySelector('.el-table').parentElement.clientHeight - 45
+		ht.value = document.querySelector('.el-table').parentElement.clientHeight - 75
 	})
 }
 
@@ -137,23 +144,23 @@ const showMenuPosition = (event) => {
 	menu["style"].zIndex = 1000;
 }
 const setMenu = (str) => {
-	if (mode == "row") {
+	if (mode.value == "row") {
 		for (let i in modeData.row) {
-			if (i == "@uuid" || (i == primaryKey && (str == null || str == ""))) {
+			if (i == "@uuid" || (i == primaryKey && empty(str))) {
 				continue
 			}
 			modeData.row[i] = str
 		}
-	} else if (mode == "column") {
-		if (modeData.property == primaryKey && (str == null || str == "")) {
+	} else if (mode.value == "column") {
+		if (modeData.property == primaryKey && empty(str)) {
 			ElMessage.error("主键不允许设空")
 			return
 		}
 		tableData.value.forEach(e => {
 			e[modeData.property] = str
 		})
-	} else if (mode == "cell") {
-		if ((str == null || str == "") && modeData.column.property == primaryKey) {
+	} else if (mode.value == "cell") {
+		if (empty(str) && modeData.column.property == primaryKey) {
 			ElMessage.error("主键不允许设空")
 			return
 		}
@@ -161,12 +168,12 @@ const setMenu = (str) => {
 	}
 }
 const setEmpty = (flag) => {
-	console.log(mode + " 点击了设置空白字符串")
+	console.log(mode.value + " 点击了设置空白字符串")
 	changedFlag.value = 1
 	setMenu("")
 }
 const setNull = (flag) => {
-	console.log(mode + " 点击了设置null")
+	console.log(mode.value + " 点击了设置null")
 	changedFlag.value = 1
 	setMenu(null)
 }
@@ -183,11 +190,12 @@ const clearSelected = () => {
 //行全选右键
 const selectedRow = ref(new Set([]))
 const rowRightClick = (row, event, showMenu = false) => {
+
 	clearSelected()
 	document.getElementsByClassName("table")[0].classList.add("showTree")
 	selectedRow.value.add(row.$index)
 	if (showMenu) {
-		mode = "row"
+		mode.value = "row"
 		modeData = row
 		showMenuPosition(event)
 	}
@@ -206,7 +214,7 @@ const cellRightClick = (row, event, showMenu = false) => {
 	document.getElementsByClassName("table")[0].classList.remove("showTree")
 	selectedCell.value.add(row.$index + "," + row.cellIndex)
 	if (showMenu) {
-		mode = "cell"
+		mode.value = "cell"
 		modeData = row
 		showMenuPosition(event)
 	}
@@ -227,7 +235,7 @@ const HeaderRightClick = (column, event, showMenu = false) => {
 	document.getElementsByClassName("table")[0].classList.remove("showTree")
 	selectedHeader.value.add(column.no)
 	if (showMenu && column.no != 0) {
-		mode = "column"
+		mode.value = "column"
 		modeData = column
 		showMenuPosition(event)
 	}
@@ -300,14 +308,27 @@ const changeApply = () => {
 			e.classList.remove("changed")
 		})
 	})
-	console.log(changedData)
 }
+const hideColumn = () => {
+
+	tableColumn[modeData['no'] - 1]["hideFlag"] = true
+	console.log(tableColumn)
+}
+
+const columnFilter = computed(() => {
+	return tableColumn.filter((res: any) => {
+		return res.hideFlag == false
+	})
+})
 
 </script>
 
 <template>
+	<div class="topButton">
+		<el-button size="small" :icon="Switch" @click="changeHeader">切换表头({{ headerType }})</el-button>
+		<el-button size="small" :icon="Filter">筛选</el-button>
+	</div>
 	<el-table :data="tableData" border class="table" ref="table" :fit="true" table-layout='auto'
-	          :max-height="ht"
 	          @header-contextmenu=" ( column, event) =>HeaderRightClick(column, event,true)"
 	          @contextmenu="()=>{}"
 	          :row-class-name="selectedRowClass"
@@ -323,10 +344,10 @@ const changeApply = () => {
 				</div>
 			</template>
 		</el-table-column>
-		<el-table-column v-for="item in tableColumn" :key="item.prop" :prop="item.prop" :label="item.label"
+		<el-table-column v-for="(item,index) in columnFilter" :key="index" :prop="item.prop" :label="item.label"
 		                 :width="flexWidth(item.label)" :min-width="0" :show-overflow-tooltip="true">
 			<template #header>
-				{{ item.label }}
+				{{ headerType == 'en' ? item.label : item.comment }}
 			</template>
 			<template #default="scope">
 				<input v-if="editX==scope.$index&& editY==scope.column.no"
@@ -362,15 +383,31 @@ const changeApply = () => {
 			<p @click="setEmpty">设置为空白字符串</p>
 			<p @click="setNull">设置为 NULL</p>
 			<el-divider/>
+			<p @click="deleteLine" v-if="mode=='column'">添加到筛选</p>
+			<p @click="hideColumn" v-if="mode=='column'">隐藏本列</p>
+			<p @click="deleteLine" v-if="mode=='column'">显示全部</p>
 			<p @click="deleteLine" v-if="mode=='row'">删除 记录</p>
 		</div>
 	</div>
 </template>
 
 <style scoped>
+
+.topButton {
+	background: white;
+	width: 100%;
+	border-left: 1px solid var(--el-border-color-light);
+
+	& .el-button {
+		border: unset !important;
+		margin: 3px;
+	}
+}
+
 .flexBottom {
 	display: flex;
-
+	border: 1px solid var(--el-border-color-light);
+	border-top: unset;
 }
 
 .bottomCheck {

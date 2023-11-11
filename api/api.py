@@ -118,7 +118,7 @@ class API(System, Storage):
 
     @connect
     def desc_table(self, data: Connect, db, other):
-        cmd = "desc " + data.table
+        cmd = "show full columns from  " + data.table
         table_data = self.cursor_data(db, cmd)
         return success(table_data)
 

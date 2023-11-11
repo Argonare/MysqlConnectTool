@@ -19,17 +19,16 @@ from api.api import API
 from pyapp.config.config import Config
 from pyapp.db.db import DB
 
-
-cfg = Config()    # 配置
-db = DB()    # 数据库类
-api = API()    # 本地接口
+cfg = Config()  # 配置
+db = DB()  # 数据库类
+api = API()  # 本地接口
 
 cfg.init()
 
 
 def on_shown():
     # print('程序启动')
-    db.init()    # 初始化数据库
+    db.init()  # 初始化数据库
 
 
 def on_loaded():
@@ -43,7 +42,6 @@ def on_closing():
 
 
 def WebViewApp(ifCef=False):
-
     # 是否为开发环境
     Config.devEnv = sys.flags.dev_mode
 
@@ -51,11 +49,11 @@ def WebViewApp(ifCef=False):
     if Config.devEnv:
         # 开发环境
         MAIN_DIR = f'http://localhost:{Config.devPort}/'
-        template = os.path.join(MAIN_DIR, "")    # 设置页面，指向远程
+        template = os.path.join(MAIN_DIR, "")  # 设置页面，指向远程
     else:
         # 生产环境
         MAIN_DIR = os.path.join(".", "web")
-        template = os.path.join(MAIN_DIR, "index.html")    # 设置页面，指向本地
+        template = os.path.join(MAIN_DIR, "index.html")  # 设置页面，指向本地
 
     # 系统分辨率
     screens = webview.screens
@@ -65,11 +63,12 @@ def WebViewApp(ifCef=False):
     # 程序窗口大小
     initWidth = int(width * 2 / 3)
     initHeight = int(height * 4 / 5)
-    minWidth = int(initWidth / 2)
-    minHeight = int(initHeight / 2)
+    minWidth = int(initWidth * 0.8)
+    minHeight = int(initHeight * 0.8)
 
     # 创建窗口
-    window = webview.create_window(title=Config.appName, url=template, js_api=api, width=initWidth, height=initHeight, min_size=(minWidth, minHeight))
+    window = webview.create_window(title=Config.appName, url=template, js_api=api, width=initWidth, height=initHeight,
+                                   min_size=(minWidth, minHeight))
 
     # 获取窗口实例
     api.setWindow(window)
@@ -87,11 +86,10 @@ def WebViewApp(ifCef=False):
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--cef", action="store_true", dest="if_cef", help="if_cef")
     args = parser.parse_args()
 
-    ifCef = args.if_cef    # 是否开启cef模式
+    ifCef = args.if_cef  # 是否开启cef模式
 
     WebViewApp(ifCef)
