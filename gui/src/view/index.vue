@@ -59,8 +59,6 @@ watch(router.currentRoute, (to) => {
         if (nickName==null) {
             nickName = to.name
         }
-		console.log(to)
-	    console.log(nickName)
         store.commit('add_tabs', {route: to.fullPath, name: to.name, nickName: nickName});
         store.commit('set_active_index', to.fullPath);
     }
@@ -236,10 +234,7 @@ footer {
     display: flex;
 }
 
-.flexColumn {
-    flex-direction: column;
-    justify-content: center;
-}
+
 
 
 .scroll {

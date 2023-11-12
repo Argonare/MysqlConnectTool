@@ -61,9 +61,9 @@ def WebViewApp(ifCef=False):
     width = screens.width
     height = screens.height
     # 程序窗口大小
-    initWidth = int(width * 2 / 3)
-    initHeight = int(height * 4 / 5)
-    minWidth = int(initWidth * 0.8)
+    initWidth = int(width)
+    initHeight = int(height)
+    minWidth = int(initWidth * 0.6)
     minHeight = int(initHeight * 0.8)
 
     # 创建窗口

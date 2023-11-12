@@ -1,8 +1,8 @@
 <template>
-    <div class="flexItem" @contextmenu="(e)=>{e.preventDefault();}">
-        <index></index>
-        <router-view></router-view>
-    </div>
+	<div class="flexItem" @contextmenu="(e)=>{e.preventDefault();}">
+		<index></index>
+		<router-view></router-view>
+	</div>
 </template>
 
 
@@ -11,19 +11,24 @@
 import Index from "./view/index.vue";
 
 
-
 </script>
 
 
 <style>
 .flexItem {
-    display: flex;
-    flex-wrap: wrap;
-    height: 100%
+	display: flex;
+	flex-wrap: wrap;
+	height: 100%
+}
+
+.flexColumn {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
 }
 
 @font-face {
-    font-family: 'PingFangSC-Regular';
-    src: url('./assets/font/PingFang Regular.ttf');
+	font-family: 'PingFangSC-Regular';
+	src: url('./assets/font/PingFang Regular.ttf');
 }
 </style>

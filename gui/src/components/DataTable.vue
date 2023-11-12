@@ -4,6 +4,7 @@ import {computed, getCurrentInstance, nextTick, onMounted, reactive, ref, toRaw}
 import {Check, Close, Filter, Switch} from "@element-plus/icons-vue";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {empty, emptyDefault} from '@/js/common'
+import ListSearch from "@/components/listSearch.vue";
 
 const {proxy}: any = getCurrentInstance();
 const route = useRoute();
@@ -25,6 +26,13 @@ let currentPage = 1
 let count: number = 0
 let mode = ref("")
 let modeData = null
+
+
+const searchList = computed(() => {
+	return tableColumn.map(e => {
+		return {name: headerType.value === 'en' ? e.prop : e.comment, value: e.prop}
+	})
+});
 
 
 nextTick(() => {
@@ -310,9 +318,7 @@ const changeApply = () => {
 	})
 }
 const hideColumn = () => {
-
 	tableColumn[modeData['no'] - 1]["hideFlag"] = true
-	console.log(tableColumn)
 }
 
 const columnFilter = computed(() => {
@@ -320,13 +326,56 @@ const columnFilter = computed(() => {
 		return res.hideFlag == false
 	})
 })
+const showAll = () => {
+	tableColumn.forEach(e => {
+		e.hideFlag = false
+	})
+}
+const showFilter = ref(0)
+const showSearch = ref(0)
+const showSearchPanel = (event, value) => {
+	let menu = document.querySelector("#searchList");
+	let item = menu.parentElement.parentElement.parentElement.parentElement.parentElement
+	showSearch.value = 1
+	menu["style"].left = event.clientX - item.offsetLeft + "px";
+	menu["style"].top = event.clientY - item.offsetTop - 54 + "px";
+	// 改变自定义菜单的隐藏与显示
+	menu["style"].display = "block";
+	menu["style"].zIndex = 1000;
+}
+const getSearchData = (data) => {
+	showSearch.value = 0
+}
+const searchParam = ref([])
 
+const addParam = () => {
+	let e = tableColumn[0]
+	searchParam.value.push({
+		"field": e.prop,
+		"cal": "=",
+		value: "<?>",
+		comment: headerType.value == 'en' ? e.prop : e.comment
+	})
+
+}
 </script>
 
 <template>
 	<div class="topButton">
 		<el-button size="small" :icon="Switch" @click="changeHeader">切换表头({{ headerType }})</el-button>
-		<el-button size="small" :icon="Filter">筛选</el-button>
+		<el-button size="small" :icon="Filter" @click="showFilter=1-showFilter">筛选</el-button>
+	</div>
+	<div class="topSelect flexColumn" v-if="showFilter==1">
+		<div class="flexItem searchLine" v-for="item in searchParam">
+			<el-button type="primary" link @click="($event)=>showSearchPanel($event,'')">{{ item.comment }}</el-button>
+			<el-button type="primary" link @click="($event)=>showSearchPanel($event,'')">{{ item.cal }}</el-button>
+			<el-button type="primary" link @click="($event)=>showSearchPanel($event,'')">{{ item.value }}</el-button>
+		</div>
+		<div class="flexItem addIcon">
+			<el-icon @click="addParam">
+				<CirclePlus/>
+			</el-icon>
+		</div>
 	</div>
 	<el-table :data="tableData" border class="table" ref="table" :fit="true" table-layout='auto'
 	          @header-contextmenu=" ( column, event) =>HeaderRightClick(column, event,true)"
@@ -385,13 +434,40 @@ const columnFilter = computed(() => {
 			<el-divider/>
 			<p @click="deleteLine" v-if="mode=='column'">添加到筛选</p>
 			<p @click="hideColumn" v-if="mode=='column'">隐藏本列</p>
-			<p @click="deleteLine" v-if="mode=='column'">显示全部</p>
+			<p @click="showAll" v-if="mode=='column'">显示全部</p>
 			<p @click="deleteLine" v-if="mode=='row'">删除 记录</p>
 		</div>
+	</div>
+	<div v-show="showSearch" id="searchList">
+		<list-search :search-list="searchList" @get-res="getSearchData" @cancel="showSearch=0"></list-search>
 	</div>
 </template>
 
 <style scoped>
+
+.addIcon {
+	margin: 0.3em;
+	color: #409EFF;
+	cursor: pointer;
+	width: 1.5em;
+
+	&:hover {
+		opacity: 0.8;
+	}
+}
+
+
+.topSelect {
+	background: white;
+	width: 100%;
+	border: 1px solid var(--el-border-color-light);
+ & .searchLine{
+	 margin: 0.2em 1em;
+ }
+	& .el-button {
+		padding:  0 0.3em;
+	}
+}
 
 .topButton {
 	background: white;
@@ -439,6 +515,10 @@ const columnFilter = computed(() => {
 
 .nullDiv {
 	opacity: 0.5;
+}
+
+#searchList {
+	position: absolute;
 }
 
 #menu {
