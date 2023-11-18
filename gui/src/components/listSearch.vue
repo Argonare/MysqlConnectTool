@@ -1,12 +1,12 @@
 <template>
 	<div class="market-details-container">
-		<el-input v-model="keyword" clearable/>
-		<div class="flexColumn">
+		<el-input v-model="keyword" clearable v-if="mode===1||mode===3"/>
+		<div class="flexColumn" v-if="mode>1">
 			<div v-for="(v, k) in filterList" :key="k" class="listItem" @click="activeItem(v)"
 			     :class="activeName===v.value?'listItemActive':''">{{ v.name }}
 			</div>
 		</div>
-		<div class="flexItem">
+		<div class="flexItem bottomButton">
 			<el-button type="primary" @click="confirmMsg">确定</el-button>
 			<el-button @click="cancel">取消</el-button>
 		</div>
@@ -16,22 +16,28 @@
 <script setup>
 import {toRefs, onMounted, computed, ref, toRaw} from 'vue';
 import {empty} from "@/js/common";
-
+//mode 1 仅input 2 仅list 3所有
 const props = defineProps({
 	searchList: Array,
-	defaultValue: String
+	defaultValue: String,
+	mode: Number
 })
 
+const {searchList, defaultValue, mode} = toRefs(props)
 const emit = defineEmits(['getRes', "cancel"])
 const cancel = () => {
 	emit('cancel')
 }
 const confirmMsg = () => {
+	if (mode.value === 1) {
+		emit('getRes', keyword.value)
+		return
+	}
 	emit('getRes', activeName.value)
 }
 const activeName = ref("")
 const keyword = ref("")
-const {searchList, defaultValue} = toRefs(props)
+
 
 const activeItem = (item) => {
 	activeName.value = item.value
@@ -44,6 +50,10 @@ const filterList = computed(() => {
 </script>
 
 <style scoped lang="scss">
+.bottomButton {
+	margin-top: 1em;
+}
+
 .flexItem {
 	justify-content: center;
 }
@@ -61,13 +71,16 @@ const filterList = computed(() => {
 }
 
 .listItem {
-	margin: 0.1em 0;
-	padding: 0.2em;
+	margin: 0.3em 0 0 ;
+	padding: 0.2em 0.5em;
 
+	&:hover {
+		background: #eee;
+	}
 }
 
 .listItemActive {
-	background: #409EFF;
+	background: #409EFF !important;
 	color: white;
 }
 </style>

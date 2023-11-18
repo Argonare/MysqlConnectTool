@@ -28,13 +28,6 @@ let mode = ref("")
 let modeData = null
 
 
-const searchList = computed(() => {
-	return tableColumn.map(e => {
-		return {name: headerType.value === 'en' ? e.prop : e.comment, value: e.prop}
-	})
-});
-
-
 nextTick(() => {
 	proxy.$request("desc_table", route.query).then(data => {
 		console.log(data)
@@ -333,18 +326,41 @@ const showAll = () => {
 }
 const showFilter = ref(0)
 const showSearch = ref(0)
-const showSearchPanel = (event, value) => {
+const showMode = ref(3)
+let listItemIndex = null
+let listItemName = null
+const searchDefaultValue = ref(null)
+const showSearchPanel = (event, value, mode = 3, index, name) => {
 	let menu = document.querySelector("#searchList");
 	let item = menu.parentElement.parentElement.parentElement.parentElement.parentElement
 	showSearch.value = 1
+	listItemIndex = index
+	listItemName = name
+	showMode.value = mode
+	searchDefaultValue.value = searchParam.value[listItemIndex][listItemName]
 	menu["style"].left = event.clientX - item.offsetLeft + "px";
 	menu["style"].top = event.clientY - item.offsetTop - 54 + "px";
 	// 改变自定义菜单的隐藏与显示
 	menu["style"].display = "block";
 	menu["style"].zIndex = 1000;
 }
+const calItem = ['=', '>', '>=', '<', '<=']
+
+const searchList = computed(() => {
+	if (showMode.value == 2) {
+		return calItem.map(e => {
+			return {name: e, value: e}
+		})
+	}
+	return tableColumn.map(e => {
+		return {name: headerType.value === 'en' ? e.prop : e.comment, value: e.prop}
+	})
+});
+
 const getSearchData = (data) => {
 	showSearch.value = 0
+	searchParam.value[listItemIndex][listItemName] = data
+
 }
 const searchParam = ref([])
 
@@ -353,7 +369,7 @@ const addParam = () => {
 	searchParam.value.push({
 		"field": e.prop,
 		"cal": "=",
-		value: "<?>",
+		value: "",
 		comment: headerType.value == 'en' ? e.prop : e.comment
 	})
 
@@ -366,12 +382,31 @@ const addParam = () => {
 		<el-button size="small" :icon="Filter" @click="showFilter=1-showFilter">筛选</el-button>
 	</div>
 	<div class="topSelect flexColumn" v-if="showFilter==1">
-		<div class="flexItem searchLine" v-for="item in searchParam">
-			<el-button type="primary" link @click="($event)=>showSearchPanel($event,'')">{{ item.comment }}</el-button>
-			<el-button type="primary" link @click="($event)=>showSearchPanel($event,'')">{{ item.cal }}</el-button>
-			<el-button type="primary" link @click="($event)=>showSearchPanel($event,'')">{{ item.value }}</el-button>
+		<div class="flexItem searchLine" v-for="(item,index) in searchParam">
+			<div class="flexItem searchBtns">
+				<el-button type="primary" link @click="($event)=>showSearchPanel($event,'',3,index,'comment')">
+					{{ item.comment }}
+				</el-button>
+				<el-button type="primary" link @click="($event)=>showSearchPanel($event,'',2,index,'cal')">
+					{{ item.cal }}
+				</el-button>
+
+				<el-button type="primary" v-if="item.value!=''" link
+				           @click="($event)=>showSearchPanel($event,'',1,index,'value')">
+					{{ item.value }}
+				</el-button>
+				<el-button type="primary" v-else link @click="($event)=>showSearchPanel($event,'',1,index,'value')">
+					&lt;&nbsp;?&nbsp;&gt;
+				</el-button>
+			</div>
+
+			<div class="flexItem addIcon" v-if="index==searchParam.length-1">
+				<el-icon @click="addParam">
+					<CirclePlus/>
+				</el-icon>
+			</div>
 		</div>
-		<div class="flexItem addIcon">
+		<div class="flexItem addIcon" v-if="searchParam.length===0" style="padding: 0.5em">
 			<el-icon @click="addParam">
 				<CirclePlus/>
 			</el-icon>
@@ -438,34 +473,40 @@ const addParam = () => {
 			<p @click="deleteLine" v-if="mode=='row'">删除 记录</p>
 		</div>
 	</div>
-	<div v-show="showSearch" id="searchList">
-		<list-search :search-list="searchList" @get-res="getSearchData" @cancel="showSearch=0"></list-search>
+	<div v-show="showSearch==1" id="searchList">
+		<list-search :search-list="searchList" @get-res="getSearchData" @cancel="showSearch=0"
+		             :mode="showMode" :defaultValue="searchDefaultValue"></list-search>
 	</div>
 </template>
 
 <style scoped>
 
 .addIcon {
-	margin: 0.3em;
 	color: #409EFF;
 	cursor: pointer;
 	width: 1.5em;
+	padding-left: 1em;
 
 	&:hover {
 		opacity: 0.8;
 	}
 }
 
+.searchBtns {
+	min-width: 100px;
+}
 
 .topSelect {
 	background: white;
 	width: 100%;
 	border: 1px solid var(--el-border-color-light);
- & .searchLine{
-	 margin: 0.2em 1em;
- }
+
+	& .searchLine {
+		margin: 0.5em 1em;
+	}
+
 	& .el-button {
-		padding:  0 0.3em;
+		padding: 0 0.3em;
 	}
 }
 
