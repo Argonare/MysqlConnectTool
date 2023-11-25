@@ -4,7 +4,7 @@ import {computed, getCurrentInstance, nextTick, onMounted, reactive, ref, toRaw}
 import {Check, Close, Filter, Switch} from "@element-plus/icons-vue";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {empty, emptyDefault} from '@/js/common'
-import ListSearch from "@/components/listSearch.vue";
+import SqlFilter from "@/components/level3/sqlFilter.vue";
 
 const {proxy}: any = getCurrentInstance();
 const route = useRoute();
@@ -15,6 +15,7 @@ const tableData = ref([])
 const showMenu = ref(false)
 const changedFlag = ref(0)
 const headerType = ref("en")
+
 let oldData = []
 let oldDataMap = {}
 let primaryKey = ""
@@ -30,7 +31,6 @@ let modeData = null
 
 nextTick(() => {
 	proxy.$request("desc_table", route.query).then(data => {
-		console.log(data)
 		let tableDesc = []
 		data.forEach(e => {
 			if (e.Key != "") {
@@ -324,94 +324,16 @@ const showAll = () => {
 		e.hideFlag = false
 	})
 }
-const showFilter = ref(0)
-const showSearch = ref(0)
-const showMode = ref(3)
-let listItemIndex = null
-let listItemName = null
-const searchDefaultValue = ref(null)
-const showSearchPanel = (event, value, mode = 3, index, name) => {
-	let menu = document.querySelector("#searchList");
-	let item = menu.parentElement.parentElement.parentElement.parentElement.parentElement
-	showSearch.value = 1
-	listItemIndex = index
-	listItemName = name
-	showMode.value = mode
-	searchDefaultValue.value = searchParam.value[listItemIndex][listItemName]
-	menu["style"].left = event.clientX - item.offsetLeft + "px";
-	menu["style"].top = event.clientY - item.offsetTop - 54 + "px";
-	// 改变自定义菜单的隐藏与显示
-	menu["style"].display = "block";
-	menu["style"].zIndex = 1000;
-}
-const calItem = ['=', '>', '>=', '<', '<=']
+const sqlFilter = ref()
 
-const searchList = computed(() => {
-	if (showMode.value == 2) {
-		return calItem.map(e => {
-			return {name: e, value: e}
-		})
-	}
-	return tableColumn.map(e => {
-		return {name: headerType.value === 'en' ? e.prop : e.comment, value: e.prop}
-	})
-});
-
-const getSearchData = (data) => {
-	showSearch.value = 0
-	searchParam.value[listItemIndex][listItemName] = data
-
-}
-const searchParam = ref([])
-
-const addParam = () => {
-	let e = tableColumn[0]
-	searchParam.value.push({
-		"field": e.prop,
-		"cal": "=",
-		value: "",
-		comment: headerType.value == 'en' ? e.prop : e.comment
-	})
-
-}
 </script>
 
 <template>
 	<div class="topButton">
 		<el-button size="small" :icon="Switch" @click="changeHeader">切换表头({{ headerType }})</el-button>
-		<el-button size="small" :icon="Filter" @click="showFilter=1-showFilter">筛选</el-button>
+		<el-button size="small" :icon="Filter" @click="sqlFilter.switchFilter()">筛选</el-button>
 	</div>
-	<div class="topSelect flexColumn" v-if="showFilter==1">
-		<div class="flexItem searchLine" v-for="(item,index) in searchParam">
-			<div class="flexItem searchBtns">
-				<el-button type="primary" link @click="($event)=>showSearchPanel($event,'',3,index,'comment')">
-					{{ item.comment }}
-				</el-button>
-				<el-button type="primary" link @click="($event)=>showSearchPanel($event,'',2,index,'cal')">
-					{{ item.cal }}
-				</el-button>
-
-				<el-button type="primary" v-if="item.value!=''" link
-				           @click="($event)=>showSearchPanel($event,'',1,index,'value')">
-					{{ item.value }}
-				</el-button>
-				<el-button type="primary" v-else link @click="($event)=>showSearchPanel($event,'',1,index,'value')">
-					&lt;&nbsp;?&nbsp;&gt;
-				</el-button>
-			</div>
-
-			<div class="flexItem addIcon" v-if="index==searchParam.length-1">
-				<el-icon @click="addParam">
-					<CirclePlus/>
-				</el-icon>
-			</div>
-		</div>
-		<div class="flexItem addIcon" v-if="searchParam.length===0" style="padding: 0.5em">
-			<el-icon @click="addParam">
-				<CirclePlus/>
-			</el-icon>
-		</div>
-	</div>
+	<sql-filter ref="sqlFilter" :header-type="headerType" :table-column="tableColumn"></sql-filter>
 	<el-table :data="tableData" border class="table" ref="table" :fit="true" table-layout='auto'
 	          @header-contextmenu=" ( column, event) =>HeaderRightClick(column, event,true)"
 	          @contextmenu="()=>{}"
@@ -473,42 +395,11 @@ const addParam = () => {
 			<p @click="deleteLine" v-if="mode=='row'">删除 记录</p>
 		</div>
 	</div>
-	<div v-show="showSearch==1" id="searchList">
-		<list-search :search-list="searchList" @get-res="getSearchData" @cancel="showSearch=0"
-		             :mode="showMode" :defaultValue="searchDefaultValue"></list-search>
-	</div>
+
 </template>
 
 <style scoped>
 
-.addIcon {
-	color: #409EFF;
-	cursor: pointer;
-	width: 1.5em;
-	padding-left: 1em;
-
-	&:hover {
-		opacity: 0.8;
-	}
-}
-
-.searchBtns {
-	min-width: 100px;
-}
-
-.topSelect {
-	background: white;
-	width: 100%;
-	border: 1px solid var(--el-border-color-light);
-
-	& .searchLine {
-		margin: 0.5em 1em;
-	}
-
-	& .el-button {
-		padding: 0 0.3em;
-	}
-}
 
 .topButton {
 	background: white;
@@ -531,15 +422,16 @@ const addParam = () => {
 	background: white;
 	display: flex;
 	padding-right: 1em;
+
+	& .el-button:first-child {
+		margin-left: 1.5em;
+	}
+
+	& .el-button {
+		align-self: center;
+	}
 }
 
-.bottomCheck .el-button:first-child {
-	margin-left: 1.5em;
-}
-
-.bottomCheck .el-button {
-	align-self: center;
-}
 
 /deep/ tr:hover > td {
 	background-color: unset !important;
@@ -558,9 +450,6 @@ const addParam = () => {
 	opacity: 0.5;
 }
 
-#searchList {
-	position: absolute;
-}
 
 #menu {
 	position: absolute;

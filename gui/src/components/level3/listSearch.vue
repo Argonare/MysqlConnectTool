@@ -19,15 +19,16 @@ import {empty} from "@/js/common";
 //mode 1 仅input 2 仅list 3所有
 const props = defineProps({
 	searchList: Array,
-	defaultValue: String,
 	mode: Number
 })
-
-const {searchList, defaultValue, mode} = toRefs(props)
+const activeName = ref("")
+const keyword = ref("")
+const {searchList, mode} = toRefs(props)
 const emit = defineEmits(['getRes', "cancel"])
 const cancel = () => {
 	emit('cancel')
 }
+
 const confirmMsg = () => {
 	if (mode.value === 1) {
 		emit('getRes', keyword.value)
@@ -35,8 +36,6 @@ const confirmMsg = () => {
 	}
 	emit('getRes', activeName.value)
 }
-const activeName = ref("")
-const keyword = ref("")
 
 
 const activeItem = (item) => {
@@ -46,7 +45,10 @@ const filterList = computed(() => {
 	return searchList.value.filter((v) => !empty(keyword) || v.name.indexOf(keyword.value) !== -1);
 });
 
-
+const setDefaultValue = (str) => {
+	activeName.value = str
+}
+defineExpose({setDefaultValue})
 </script>
 
 <style scoped lang="scss">
@@ -71,7 +73,7 @@ const filterList = computed(() => {
 }
 
 .listItem {
-	margin: 0.3em 0 0 ;
+	margin: 0.3em 0 0;
 	padding: 0.2em 0.5em;
 
 	&:hover {

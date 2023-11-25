@@ -18,7 +18,6 @@ function getUrlParam(url) {
 
 export function getTargetUrlParam(url, key) {
     let param = getUrlParam(url);
-        console.log(param)
     console.log(key)
     if(key==null||param[key]==null){
         return null

@@ -15,12 +15,12 @@ const routes = [
     {
         path: "/DataTable",
         name: "表格数据",
-        component: () => import(/* webpackChunkName: "about" */ "@/components/DataTable.vue"),
+        component: () => import(/* webpackChunkName: "about" */ "@/components/level2/DataTable.vue"),
     }
     , {
         path: "/sqlEditor",
         name: "test",
-        component: () => import(/* webpackChunkName: "about" */ "../components/sqlEditor.vue"),
+        component: () => import(/* webpackChunkName: "about" */ "../components/level2/sqlEditor.vue"),
     }
 ];
 

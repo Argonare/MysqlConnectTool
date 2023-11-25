@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 
 import {nextTick, onMounted, ref, watch} from 'vue'
-import ConnectDialog from "@/components/connectDialog.vue";
-import MenuItem from "@/components/menuItem.vue";
-import ConnectTree from "@/components/connectTree.vue";
-import RightWindow from "@/components/rightWindow.vue";
+import ConnectDialog from "@/components/level2/connectDialog.vue";
+import MenuItem from "@/components/level1/menuItem.vue";
+import ConnectTree from "@/components/level1/connectTree.vue";
+import RightWindow from "@/components/level1/rightWindow.vue";
 import {getTargetUrlParam} from "@/assets/common.js"
 import {onBeforeRouteUpdate, useRoute, useRouter} from 'vue-router'
 
@@ -123,12 +123,12 @@ const openEditor = () => {
                 </div>
             </div>
         </el-col>
-        <el-col :span="24" class="flex height100">
+        <el-col :span="24" class="flex height100 ">
             <div class=" white" id="left-tree">
                 <connect-tree ref="connectTree"></connect-tree>
                 <div id="resize" class="resize" title="收缩侧边栏">⋮</div>
             </div>
-            <div class="" id="right-content">
+            <div class="flex1" id="right-content">
                 <right-window ref="rightWindow"></right-window>
             </div>
         </el-col>
@@ -148,7 +148,9 @@ const openEditor = () => {
     flex-shrink: 0;
     height: 100%;
 }
-
+.flex1{
+	flex: 1;
+}
 .resize {
     cursor: col-resize;
     position: absolute;
