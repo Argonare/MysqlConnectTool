@@ -3,7 +3,8 @@
 		<el-input v-model="keyword" clearable v-if="mode===1||mode===3"/>
 		<div class="flexColumn" v-if="mode>1">
 			<div v-for="(v, k) in filterList" :key="k" class="listItem" @click="activeItem(v)"
-			     :class="activeName===v.value?'listItemActive':''">{{ v.name }}
+			     :class="activeName.value===v.value?'listItemActive':''">
+				{{ v.key }}
 			</div>
 		</div>
 		<div class="flexItem bottomButton">
@@ -19,7 +20,8 @@ import {empty} from "@/js/common";
 //mode 1 仅input 2 仅list 3所有
 const props = defineProps({
 	searchList: Array,
-	mode: Number
+	mode: Number,
+
 })
 const activeName = ref("")
 const keyword = ref("")
@@ -34,18 +36,23 @@ const confirmMsg = () => {
 		emit('getRes', keyword.value)
 		return
 	}
+	keyword.value = ""
 	emit('getRes', activeName.value)
 }
 
 
 const activeItem = (item) => {
-	activeName.value = item.value
+	activeName.value = item
 }
 const filterList = computed(() => {
 	return searchList.value.filter((v) => !empty(keyword) || v.name.indexOf(keyword.value) !== -1);
 });
 
-const setDefaultValue = (str) => {
+const setDefaultValue = (str, mode) => {
+	if (mode === "value") {
+		keyword.value = str
+		return
+	}
 	activeName.value = str
 }
 defineExpose({setDefaultValue})

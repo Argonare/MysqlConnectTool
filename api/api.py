@@ -107,8 +107,13 @@ class API(System, Storage):
     def get_data(self, data: Connect, db, other):
         page_size = other["pageSize"]  # 每页显示的记录数
         current_page = other["currentPage"]  # 当前页码
+        where_data: str = other["whereData"]
+        if where_data is not None and where_data.strip() != '':
+            where_data = " where " + where_data
+        else:
+            where_data = ""
         start_position = (current_page - 1) * page_size
-        cmd = "select * from " + data.table + " limit " + str(start_position) + "," + str(page_size)
+        cmd = "select * from " + data.table + where_data + " limit " + str(start_position) + "," + str(page_size)
         table_data = self.cursor_data(db, cmd)
         for i in table_data:
             i["@uuid"] = str(uuid.uuid4())

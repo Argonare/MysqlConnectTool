@@ -7,6 +7,7 @@ const props = defineProps({
 	headerType: String,
 	tableColumn: Array
 })
+const emit = defineEmits(['getRes', "cancel"])
 const {headerType, tableColumn} = toRefs(props)
 const showFilter = ref(0)
 const searchParam = ref([])
@@ -18,15 +19,18 @@ const listSearch = ref()
 const applyFilter = () => {
 	let res = []
 	searchParam.value.forEach((e, index) => {
-		let param = ""
-		if (index === searchParam.value.length - 1) {
-			param = `${e.field} ${e.cal} '${e.value}'`
-		} else {
-			param = `${e.field} ${e.cal} '${e.value}' ${e.seq}`
+		let param = `${e.field} ${e.cal}`
+		if (!e.noValue) {
+			param += ` '${e.value}'`
 		}
+		if (index !== searchParam.value.length - 1) {
+			param += ` ${e.seq}`
+		}
+
 		res.push(param)
 	})
-	console.log(res.join(" "))
+	console.log(222)
+	emit('getRes', res.join(" "))
 }
 const clearFilter = () => {
 	searchParam.value = []
@@ -34,18 +38,41 @@ const clearFilter = () => {
 
 const showMode = ref(3)
 
-const calItem = ['=', '>', '>=', '<', '<=']
-
-const splitItem = ['and', 'or']
+const calItem = [
+	{
+		key: '=',
+		value: '=',
+	}, {
+		key: '>',
+		value: '>',
+	}, {
+		key: '>=',
+		value: '>=',
+	}, {
+		key: '<',
+		value: '<',
+	}, {
+		key: '<=',
+		value: '<=',
+	},
+	{
+		key: '为空',
+		value: "is null",
+		noValue: true
+	},
+	{
+		key: '不为空',
+		value: "is not null",
+		noValue: true
+	},
+]
 
 const searchList = computed(() => {
 	if (showMode.value === 2) {
-		return calItem.map(e => {
-			return {name: e, value: e}
-		})
+		return calItem
 	}
 	return tableColumn.value.map(e => {
-		return {name: headerType.value === 'en' ? e.prop : e.comment, value: e.prop}
+		return {key: headerType.value === 'en' ? e.prop : e.comment, value: e.prop}
 	})
 });
 
@@ -58,8 +85,7 @@ const showSearchPanel = (event, value, mode = 3, index, name) => {
 	listItemIndex = index
 	listItemName = name
 	showMode.value = mode
-
-	listSearch.value.setDefaultValue(searchParam.value[listItemIndex][listItemName])
+	listSearch.value.setDefaultValue(searchParam.value[listItemIndex][listItemName], listItemName)
 	menu["style"].left = event.clientX - item.offsetLeft + "px";
 	menu["style"].top = event.clientY - item.offsetTop - 54 + "px";
 	// 改变自定义菜单的隐藏与显示
@@ -68,9 +94,19 @@ const showSearchPanel = (event, value, mode = 3, index, name) => {
 	showSearch.value = 1
 }
 const getSearchData = (data) => {
-	showSearch.value = 0
-	searchParam.value[listItemIndex][listItemName] = data
 
+	showSearch.value = 0
+	if (typeof data == "string") {
+		searchParam.value[listItemIndex][listItemName] = data
+		return
+	}
+	searchParam.value[listItemIndex][listItemName] = data.value
+	if (data.noValue === true) {
+		searchParam.value[listItemIndex].noValue = true
+	} else {
+		searchParam.value[listItemIndex].noValue = false
+	}
+	console.log(searchParam.value)
 }
 
 
@@ -88,6 +124,9 @@ const addParam = () => {
 const switchFilter = () => {
 	showFilter.value = 1 - showFilter.value
 }
+const removeItem=(index)=>{
+	searchParam.value.splice(index,1)
+}
 defineExpose({switchFilter})
 </script>
 
@@ -96,21 +135,27 @@ defineExpose({switchFilter})
 		<div class="flexItem searchLine" v-for="(item,index) in searchParam"
 		     :class="index===activeIndex?'activeSearch':''">
 			<div class="flexItem searchBtns">
-				<el-button type="primary" link @click="($event)=>showSearchPanel($event,'',3,index,'comment')">
+				<el-button type="primary" link
+				           @click="($event)=>{showSearchPanel($event,'',3,index,'comment');
+									($event)=>showSearchPanel($event,'',3,index,'field')}">
 					{{ item.comment }}
 				</el-button>
-				<el-button type="primary" link @click="($event)=>showSearchPanel($event,'',2,index,'cal')">
+				<el-button type="primary" link
+				           @click="($event)=>showSearchPanel($event,'',2,index,'cal')">
 					{{ item.cal }}
 				</el-button>
-				<el-button type="primary" v-if="item.value!==''" link
-				           @click="($event)=>showSearchPanel($event,'',1,index,'value')">
-					{{ item.value }}
-				</el-button>
-				<el-button type="primary" v-else link @click="($event)=>showSearchPanel($event,'',1,index,'value')">
-<!--					&lt;&nbsp;?&nbsp;&gt;-->
-					""
-				</el-button>
-				<div class="center" v-if="index!==searchParam.length-1" >
+				<div class="flexItem" v-if="!item.noValue">
+					<el-button type="primary" v-if="item.value!==''" link
+					           @click="($event)=>showSearchPanel($event,'',1,index,'value')">
+						{{ item.value }}
+					</el-button>
+					<el-button type="primary" v-else link
+					           @click="($event)=>showSearchPanel($event,'',1,index,'value')">
+						""
+					</el-button>
+				</div>
+
+				<div class="center" v-if="index!==searchParam.length-1">
 					<el-button type="primary" link v-if="item.seq==='or'" @click="item.seq='and'">
 						or
 					</el-button>
@@ -124,7 +169,15 @@ defineExpose({switchFilter})
 					<el-icon @click="addParam">
 						<CirclePlus/>
 					</el-icon>
+
 				</div>
+				<div class="flexItem addIcon">
+					<el-icon @click="removeItem(index)" >
+					<Remove />
+				</el-icon>
+
+				</div>
+
 			</div>
 		</div>
 		<div class="flexItem addIcon moreIco" v-if="searchParam.length===0">
@@ -169,7 +222,8 @@ defineExpose({switchFilter})
 		opacity: 0.8;
 	}
 }
-.center{
+
+.center {
 	padding-left: 0.5em;
 	align-content: center;
 }
@@ -189,11 +243,16 @@ defineExpose({switchFilter})
 		min-height: 22px;
 	}
 
-	& .el-button {
-		padding: 0 0.3em;
-	}
 
 	& .searchBtns {
+		& > * {
+			padding: 0 0.3em;
+		}
+
+		& > .flexItem:not(:last-child) {
+			margin-left: 12px;
+		}
+
 		min-width: 100px;
 		padding: 2px 0.5em;
 	}

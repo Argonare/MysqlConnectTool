@@ -15,7 +15,7 @@ const tableData = ref([])
 const showMenu = ref(false)
 const changedFlag = ref(0)
 const headerType = ref("en")
-
+const whereData = ref("")
 let oldData = []
 let oldDataMap = {}
 let primaryKey = ""
@@ -54,6 +54,7 @@ const getData = () => {
 	let param = JSON.parse(JSON.stringify(route.query))
 	param.pageSize = pageSize
 	param.currentPage = currentPage
+	param.whereData = whereData.value
 	proxy.$request("get_data", param).then(data => {
 		tableData.value = data.list
 		oldData = JSON.parse(JSON.stringify(data.list))
@@ -325,7 +326,10 @@ const showAll = () => {
 	})
 }
 const sqlFilter = ref()
-
+const getFilter = (data) => {
+	whereData.value = data
+	getData()
+}
 </script>
 
 <template>
@@ -333,7 +337,7 @@ const sqlFilter = ref()
 		<el-button size="small" :icon="Switch" @click="changeHeader">切换表头({{ headerType }})</el-button>
 		<el-button size="small" :icon="Filter" @click="sqlFilter.switchFilter()">筛选</el-button>
 	</div>
-	<sql-filter ref="sqlFilter" :header-type="headerType" :table-column="tableColumn"></sql-filter>
+	<sql-filter ref="sqlFilter" :header-type="headerType" :table-column="tableColumn" @get-res="getFilter"></sql-filter>
 	<el-table :data="tableData" border class="table" ref="table" :fit="true" table-layout='auto'
 	          @header-contextmenu=" ( column, event) =>HeaderRightClick(column, event,true)"
 	          @contextmenu="()=>{}"
