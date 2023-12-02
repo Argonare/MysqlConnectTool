@@ -20,7 +20,10 @@ import Index from "./view/index.vue";
 	flex-wrap: wrap;
 	height: 100%
 }
-
+.flexRow{
+	display: flex;
+	flex-direction: row;
+}
 .flexColumn {
 	display: flex;
 	flex-direction: column;

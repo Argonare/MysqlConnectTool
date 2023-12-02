@@ -81,7 +81,7 @@ const handleNodeClick = (data: Tree) => {
 				console.log("点击了左侧菜单")
 				let connect_data = toRaw(tree.value.getNode(data.id).parent.parent.data)
 				store.state.lastConnect = connect_data
-				connect_data.database=data.databases
+				connect_data.database = data.databases
 				connect_data.table = data.name
 				connect_data.nickName = data.name
 				delete connect_data.sql
@@ -126,12 +126,37 @@ const loadNode = (node: Node, resolve: (data: Tree[]) => void) => {
 	}
 
 }
+const showMenuPosition = (event, data, node: Node) => {
+
+	showMenu.value = data.level
+
+	let menu = document.querySelector("#menu");
+	let item = menu.parentElement
+
+	menu["style"].left = event.clientX - item.offsetLeft + "px";
+	menu["style"].top = event.clientY - item.offsetTop + "px";
+	// 改变自定义菜单的隐藏与显示
+	menu["style"].display = "block";
+	menu["style"].zIndex = 1000;
+}
+document.addEventListener('click', e => {
+	showMenu.value = 0
+})
+const showMenu = ref(0)
 defineExpose({
 	addData,
 	refreshData
 })
-</script>
+const addTable = () => {
+	router.push({path: "/tableEdit"})
+}
+const deleteTable = () => {
 
+}
+const editTable = () => {
+
+}
+</script>
 <template>
 	<el-scrollbar style="height: 100%;">
 		<el-tree :data="data"
@@ -143,8 +168,18 @@ defineExpose({
 		         :expand-on-click-node="false"
 		         ref="tree"
 		         :highlight-current="true"
+		         @node-contextmenu="showMenuPosition"
 		         empty-text=""/>
 	</el-scrollbar>
+	{{ showMenu }}
+	<div v-show="showMenu!=0" id="menu" class="menuDiv">
+		<div class="menuUl" v-if="showMenu==3">
+			<p @click="editTable">设计表</p>
+			<p @click="addTable">新建表</p>
+			<p @click="deleteTable">删除表</p>
+			<el-divider/>
+		</div>
+	</div>
 </template>
 
 <style scoped>
@@ -152,5 +187,35 @@ defineExpose({
 	min-width: 100%;
 	height: 100%;
 	display: inline-block !important;
+}
+
+#menu {
+	position: absolute;
+
+	.menuUl > p {
+		margin: 0;
+		cursor: pointer;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.47);
+		padding: 5px 1.5em;
+		font-size: 12px;
+
+		&:hover {
+			background-color: #eee;
+		}
+	}
+
+	.menuUl {
+		min-width: 70px;
+		height: auto;
+		font-size: 14px;
+		text-align: left;
+		border-radius: 3px;
+		background-color: #fff;
+		color: black;
+		list-style: none;
+		border: 1px solid #ccc;
+		padding: 0;
+
+	}
 }
 </style>

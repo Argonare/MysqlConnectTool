@@ -132,7 +132,7 @@ defineExpose({switchFilter})
 
 <template>
 	<div class="topSelect flexColumn" v-if="showFilter===1">
-		<div class="flexItem searchLine" v-for="(item,index) in searchParam"
+		<div class="flexItem searchLine" v-for="(item,index) in searchParam" @click="activeIndex=index"
 		     :class="index===activeIndex?'activeSearch':''">
 			<div class="flexItem searchBtns">
 				<el-button type="primary" link
@@ -241,10 +241,12 @@ defineExpose({switchFilter})
 	& .searchLine {
 		align-content: center;
 		min-height: 22px;
+
 	}
 
 
 	& .searchBtns {
+		width: 100%;
 		& > * {
 			padding: 0 0.3em;
 		}

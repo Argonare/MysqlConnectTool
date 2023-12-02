@@ -19,8 +19,12 @@ const routes = [
     }
     , {
         path: "/sqlEditor",
-        name: "test",
+        name: "sql编辑器",
         component: () => import(/* webpackChunkName: "about" */ "../components/level2/sqlEditor.vue"),
+    }, {
+        path: "/tableEdit",
+        name: "表编辑",
+        component: () => import(/* webpackChunkName: "about" */ "../components/level2/tableEdit.vue"),
     }
 ];
 
