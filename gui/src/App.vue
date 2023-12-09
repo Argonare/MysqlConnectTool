@@ -34,4 +34,7 @@ import Index from "./view/index.vue";
 	font-family: 'PingFangSC-Regular';
 	src: url('./assets/font/PingFang Regular.ttf');
 }
+.cursor{
+	cursor: pointer;
+}
 </style>

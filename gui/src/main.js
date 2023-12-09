@@ -40,7 +40,7 @@ app.directive('focus', {
   mounted: function (el) {
     // 聚焦元素
       console.log(el)
-    el.focus()
+    el.querySelector("input").focus()
   }
 })
 app.config.globalProperties.$request = (func, data) => {

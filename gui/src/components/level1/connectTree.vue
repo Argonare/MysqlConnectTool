@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 import {TreeOptionProps} from "element-plus/es/components/tree/src/tree.type";
-import {getCurrentInstance, reactive, ref, toRaw} from "vue";
+import {getCurrentInstance, onMounted, reactive, ref, toRaw} from "vue";
 import {useRouter} from "vue-router";
 import {useStore} from "vuex";
 
@@ -9,6 +9,7 @@ const router = useRouter()
 const {proxy}: any = getCurrentInstance();
 const store = useStore()
 const tree = ref()
+
 let tmpData = []
 
 const getSavedData = () => {
@@ -32,6 +33,11 @@ const getSavedData = () => {
 	})
 
 }
+
+onMounted(() => {
+	getSavedData()
+})
+
 
 const refreshData = async () => {
 
@@ -126,8 +132,9 @@ const loadNode = (node: Node, resolve: (data: Tree[]) => void) => {
 	}
 
 }
+let currentData = null;
 const showMenuPosition = (event, data, node: Node) => {
-
+	currentData = node
 	showMenu.value = data.level
 
 	let menu = document.querySelector("#menu");
@@ -148,7 +155,15 @@ defineExpose({
 	refreshData
 })
 const addTable = () => {
-	router.push({path: "/tableEdit"})
+	let data = toRaw(currentData.parent.data)
+	let connect_data = toRaw(currentData.parent.parent.data)
+	store.state.lastConnect = connect_data
+	connect_data.database = data.Database
+	connect_data.table = currentData.data.name
+	connect_data.nickName = data.name
+	delete connect_data.sql
+	console.log(connect_data)
+	router.push({path: "/tableEdit", query: connect_data})
 }
 const deleteTable = () => {
 
