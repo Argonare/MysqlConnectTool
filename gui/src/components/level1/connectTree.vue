@@ -5,6 +5,11 @@ import {getCurrentInstance, onMounted, reactive, ref, toRaw} from "vue";
 import {useRouter} from "vue-router";
 import {useStore} from "vuex";
 
+onMounted(() => {
+	getSavedData()
+})
+
+
 const router = useRouter()
 const {proxy}: any = getCurrentInstance();
 const store = useStore()
@@ -33,10 +38,6 @@ const getSavedData = () => {
 	})
 
 }
-
-onMounted(() => {
-	getSavedData()
-})
 
 
 const refreshData = async () => {

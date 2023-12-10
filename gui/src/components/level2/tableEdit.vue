@@ -13,10 +13,11 @@ nextTick(() => {
 	proxy.$request("desc_table", route.query).then(data => {
 		console.log(data)
 		tableData.value = []
-		data.forEach(e => {
+		data.forEach((e, index) => {
 			var reg = /[1-9][0-9]*/g
 			let matchRes = e.Type.match(reg)
 			tableData.value.push({
+				index: index,
 				field: e.Field,
 				type: e.Type.split("(")[0],
 				length: matchRes && matchRes.length > 0 ? matchRes[0] : null,
@@ -48,12 +49,44 @@ const cellClick = (scope) => {
 const changeFlag = (row, flag) => {
 	row[flag] = !row[flag]
 }
+const typeOption = ref([
+	{label: "varchar", hasLen: true, hasPoint: false, len: 255},
+	{label: "int", hasLength: true, hasPoint: false},
+	{label: "decimal", hasLength: true, hasPoint: true},
+])
+const typeMap = reactive({})
+typeOption.value.forEach(e => {
+	typeMap[e.label] = e
+})
+const add = () => {
+	tableData.value.push({primary: false, isNull: false})
+}
+const canEdit = (scope, field = null) => {
+	if (editX.value === scope.$index && editY.value === scope.column.no) {
+		if (field == null) {
+			return true;
+		}
+		console.log(typeMap[scope.row.type][field])
+		if (typeMap[scope.row.type].value && typeMap[scope.row.type].value[field]) {
+			return true;
+		}
+	}
+	return false;
+}
+const activeRow = ref(null)
+const selectedRow = ({row, rowIndex}) => {
+	if (rowIndex === activeRow.value) {
+		return 'selectedRow'
+	}
+	return ''
+}
+const icoClick = (row) => {
+	activeRow.value = row.index
+}
 </script>
 
 <template>
 	<div class="tabPanel flexColumn">
-
-
 		<div class="flexRow topBar">
 			<div class="flexRow primaryBtn">
 				<el-icon>
@@ -62,7 +95,7 @@ const changeFlag = (row, flag) => {
 				<div class="barFont">保存</div>
 			</div>
 			<el-divider direction="vertical"/>
-			<div class="flexRow primaryBtn">
+			<div class="flexRow primaryBtn" @click="add">
 				<el-icon>
 					<CirclePlus/>
 				</el-icon>
@@ -81,27 +114,48 @@ const changeFlag = (row, flag) => {
 				<div class="barFont">删除字段</div>
 			</div>
 		</div>
-		<el-table :data="tableData" style="width: 100%" border class="subTable">
-			<el-table-column prop="field" label="字段名" width="180">
+		<el-table :data="tableData" style="width: 100%" border class="subTable" :row-class-name="selectedRow"
+		          @cell-click="(row, column, cell, event)=>icoClick(row)">
+			<el-table-column width="40" align="center" prop="ico">
 				<template #default="scope">
-					<el-input size="small" v-if="editX===scope.$index&& editY===scope.column.no"
-					          v-model="scope.row.field" v-focus @blur="iptBlur(scope, $event)"/>
-					<div v-else @click="cellClick(scope)">{{ scope.row.field }}</div>
+					<el-icon>
+						<ArrowRight/>
+					</el-icon>
 				</template>
 			</el-table-column>
-			<el-table-column prop="type" label="类型" width="100"></el-table-column>
+			<el-table-column prop="field" label="字段名" width="180">
+				<template #default="scope">
+					<el-input size="small" v-if="canEdit(scope)"
+					          v-model="scope.row.field" v-focus @blur="iptBlur(scope, $event)"/>
+					<div v-else @click="cellClick(scope)" class="height20">{{ scope.row.field }}</div>
+				</template>
+			</el-table-column>
+			<el-table-column prop="type" label="类型" width="120">
+				<template #default="scope">
+					<el-select v-model="scope.row.type" size="small" placeholder="选择类型"
+					           v-if="canEdit(scope)">
+						<el-option
+							v-for="item in typeOption"
+							:key="item.label"
+							:label="item.label"
+							:value="item.label"
+						/>
+					</el-select>
+					<div v-else @click="cellClick(scope)" class="height20">{{ scope.row.type }}</div>
+				</template>
+			</el-table-column>
 			<el-table-column prop="length" label="长度" width="90">
 				<template #default="scope">
-					<el-input size="small" v-if="editX===scope.$index&& editY===scope.column.no"
-					          v-model.number="scope.row.length" v-focus @blur="iptBlur(scope, $event)"/>
+					<el-input v-if="canEdit(scope,'hasLen')"
+					          size="small" v-model.number="scope.row.length" v-focus @blur="iptBlur(scope, $event)"/>
 					<div v-else @click="cellClick(scope)" class="height20">{{ scope.row.length }}</div>
 				</template>
 			</el-table-column>
 			<el-table-column prop="pointLen" label="小数点" width="90">
 				<template #default="scope">
-					<el-input size="small" v-if="editX===scope.$index&& editY===scope.column.no"
-					          v-model.number="scope.row.pointLen" v-focus @blur="iptBlur(scope, $event)"/>
-					<div v-else @click="cellClick(scope)" class="height20" >{{ scope.row.pointLen }}</div>
+					<el-input size="small" v-model.number="scope.row.pointLen" v-focus @blur="iptBlur(scope, $event)"
+					          v-if="canEdit(scope,'hasPoint')"/>
+					<div v-else @click="cellClick(scope)" class="height20">{{ scope.row.pointLen }}</div>
 				</template>
 			</el-table-column>
 			<el-table-column prop="isNull" label="是否null" width="90" align="center">
@@ -132,7 +186,7 @@ const changeFlag = (row, flag) => {
 				<template #default="scope">
 					<el-input size="small" v-if="editX===scope.$index&& editY===scope.column.no"
 					          v-model="scope.row.comment" v-focus @blur="iptBlur(scope, $event)"/>
-					<div v-else @click="cellClick(scope)">{{ scope.row.comment }}</div>
+					<div v-else @click="cellClick(scope)" class="height20">{{ scope.row.comment }}</div>
 				</template>
 			</el-table-column>
 		</el-table>
@@ -140,6 +194,11 @@ const changeFlag = (row, flag) => {
 </template>
 
 <style scoped>
+
+/deep/ .selectedRow {
+	background: #e7f2ff;
+}
+
 .noTag:hover {
 	background: #f56c6c;
 	color: white;
