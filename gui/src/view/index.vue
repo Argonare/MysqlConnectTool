@@ -1,25 +1,6 @@
 <script lang="ts" setup>
 
 import {nextTick, onMounted, ref, watch} from 'vue'
-import ConnectDialog from "@/components/level2/connectDialog.vue";
-import MenuItem from "@/components/level1/menuItem.vue";
-import ConnectTree from "@/components/level1/connectTree.vue";
-import RightWindow from "@/components/level1/rightWindow.vue";
-import {getTargetUrlParam} from "@/assets/common.js"
-import {onBeforeRouteUpdate, useRoute, useRouter} from 'vue-router'
-
-import {useStore} from '@/../store'
-
-const route = useRoute()
-const router = useRouter()
-const store = useStore()
-const connectDialog = ref(null)
-const connectTree = ref(null)
-const rightWindow = ref(null)
-
-const connectData = (params: Object) => {
-    connectTree.value.addData(params)
-};
 onMounted(() => {
 
 	 window.addEventListener('pywebviewready', function() {
@@ -41,6 +22,26 @@ onMounted(() => {
     store.commit('set_active_index', route.fullPath);
 
 });
+import ConnectDialog from "@/components/level2/connectDialog.vue";
+import MenuItem from "@/components/level1/menuItem.vue";
+import ConnectTree from "@/components/level1/connectTree.vue";
+import RightWindow from "@/components/level1/rightWindow.vue";
+import {getTargetUrlParam} from "@/assets/common.js"
+import {onBeforeRouteUpdate, useRoute, useRouter} from 'vue-router'
+
+import {useStore} from '@/../store'
+
+const route = useRoute()
+const router = useRouter()
+const store = useStore()
+const connectDialog = ref(null)
+const connectTree = ref(null)
+const rightWindow = ref(null)
+
+const connectData = (params: Object) => {
+    connectTree.value.addData(params)
+};
+
 watch(router.currentRoute, (to) => {
     if (route.path == "/") {
         return

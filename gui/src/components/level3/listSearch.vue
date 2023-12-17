@@ -15,7 +15,7 @@
 </template>
 
 <script setup>
-import {toRefs, onMounted, computed, ref, toRaw} from 'vue';
+import {toRefs, computed, ref, toRaw} from 'vue';
 import {empty} from "@/js/common";
 //mode 1 仅input 2 仅list 3所有
 const props = defineProps({

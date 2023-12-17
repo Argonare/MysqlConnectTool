@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import {useRoute} from "vue-router";
 import {computed, getCurrentInstance, nextTick, onMounted, reactive, ref, toRaw} from "vue";
+
+onMounted(() => {
+	getDesc()
+})
 import {Check, Close, Filter, Switch} from "@element-plus/icons-vue";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {empty, emptyDefault} from '@/js/common'
@@ -29,7 +33,7 @@ let mode = ref("")
 let modeData = null
 
 
-nextTick(() => {
+const getDesc = async () => {
 	proxy.$request("desc_table", route.query).then(data => {
 		let tableDesc = []
 		data.forEach(e => {
@@ -41,8 +45,9 @@ nextTick(() => {
 		})
 	})
 	getData()
+}
 
-})
+
 calHeight()
 
 const changeHeader = () => {
@@ -83,7 +88,7 @@ const flexWidth = (title, fontSize = 16) => {
 
 const iptBlur = (scope, e: any) => {
 	// 输入框失焦之后，背景颜色变为粉色
-	let newValue = scope.row[scope.column.label]
+	let newValue = scope.row[scope.column.property]
 	//判断是否修改
 	if (oldValue != newValue) {
 		e.target.parentElement.classList.add("changed")
@@ -96,7 +101,7 @@ let editY = ref(null);
 let chooseData = null
 const cellClick = (scope) => {
 	chooseData = scope
-	oldValue = tableData.value[scope.$index][scope.column.label]
+	oldValue = tableData.value[scope.$index][scope.column.property]
 	editX.value = scope.$index
 	editY.value = scope.column.no
 }

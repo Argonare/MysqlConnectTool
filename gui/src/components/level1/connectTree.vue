@@ -2,12 +2,14 @@
 
 import {TreeOptionProps} from "element-plus/es/components/tree/src/tree.type";
 import {getCurrentInstance, onMounted, reactive, ref, toRaw} from "vue";
-import {useRouter} from "vue-router";
-import {useStore} from "vuex";
 
 onMounted(() => {
-	getSavedData()
+	window.addEventListener('pywebviewready', function () {
+		getSavedData()
+	})
 })
+import {useRouter} from "vue-router";
+import {useStore} from "vuex";
 
 
 const router = useRouter()
@@ -17,24 +19,22 @@ const tree = ref()
 
 let tmpData = []
 
-const getSavedData = () => {
-	return new Promise((resolve) => {
-		proxy.$request("get_config", {}).then(data => {
-			data.forEach(e => {
-				e = <Tree>e
-			})
-			let saved: Tree[] = data
-			if (saved == null) {
-				return [];
-			}
-			saved.forEach((e, index) => {
-				e.id = index
-				tree.value!.append(e)
-			})
-			tmpData = saved
-			store.state.connectList = saved
-			resolve(saved)
+const getSavedData = async () => {
+	proxy.$request("get_config", {}).then(data => {
+		data.forEach(e => {
+			e = <Tree>e
 		})
+		let saved: Tree[] = data
+		if (saved == null) {
+			return [];
+		}
+		saved.forEach((e, index) => {
+			e.id = index
+			tree.value!.append(e)
+		})
+		tmpData = saved
+		store.state.connectList = saved
+		return saved
 	})
 
 }

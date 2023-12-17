@@ -171,3 +171,8 @@ class API(System, Storage):
         self.cursor_data(db, cmd)
         db.commit()
         return success()
+
+    @connect
+    def alert_table(self, data: Connect, db, other):
+        print(other)
+        return success()
