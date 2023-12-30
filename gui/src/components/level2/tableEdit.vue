@@ -43,7 +43,7 @@ const changeList = {}
 const iptBlur = (scope, e, field) => {
 	let newValue = scope.row[scope.column.property]
 	//判断是否修改
-	if (oldValue !== newValue) {
+	if (oldValue[field] !== newValue) {
 		if (scope.row.field === null || scope.row.field === '') {
 			return;
 		}
@@ -51,12 +51,13 @@ const iptBlur = (scope, e, field) => {
 			changeList[scope.row.index] = {}
 		}
 		changeList[scope.row.index][field] = scope.row[field]
+		changeList[scope.row.index]["oldField"]=oldValue["field"]
 	}
 	editX.value = null
 	editY.value = null
 }
 const cellClick = (scope) => {
-	oldValue = tableData.value[scope.$index][scope.column.property]
+	oldValue = JSON.parse(JSON.stringify(tableData.value[scope.$index]))
 	editX.value = scope.$index
 	editY.value = scope.column.no
 }
@@ -112,7 +113,15 @@ const save = () => {
 	if (JSON.stringify(changeList) === "{}") {
 		return
 	}
-	let param = {...route.query, ...changeList}
+	let obj = []
+
+	for (let item in changeList) {
+		obj.push(changeList[item])
+	}
+
+	let param = {...route.query, ...{changeList: obj}}
+
+
 	proxy.$request("alert_table", param).then(data => {
 		console.log(data)
 	})

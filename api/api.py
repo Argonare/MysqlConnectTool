@@ -18,7 +18,7 @@ import pymysql
 
 from api.apiUtil import *
 from api.apiUtil import convert, create_connect
-from api.config.customException import Exp
+from api.model.dbField import DbField
 from api.storage import Storage
 from api.system import System
 from api.model.connect import Connect
@@ -173,6 +173,26 @@ class API(System, Storage):
         return success()
 
     @connect
-    def alert_table(self, data: Connect, db, other):
-        print(other)
+    def alert_table(self, data: Connect, db, other: dict):
+        if "changeList" not in other:
+            return success()
+        change_list: list = other["changeList"]
+        cmd = "alert table {0} ".format(data.table)
+        alert_lis = []
+        for attr in change_list:
+            field: DbField = convert_class(attr, DbField)
+            if field.add is not None:
+                content = ("add column {0} {1} default null comment '{2}'"
+                           .format(field.field, get_length(field), field.comment))
+                alert_lis.append(content)
+            else:
+                content = 'change ' if field.field is not None else 'modify column '
+                content += field.oldField + " "
+                if field.type is not None or field.len is not None or field.pointLen is not None:
+                    content += get_length(field) + " "
+                if field.isNull is not None:
+                    content += ("null " if field.isNull is True else "not null ")
+                if field.comment is not None:
+                    content += "comment '{0}'".format(field.comment)
+        print(content)
         return success()

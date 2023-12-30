@@ -6,6 +6,8 @@ from api.model.connect import Connect
 
 from pymysql import converters, FIELD_TYPE
 
+from api.model.dbField import DbField
+
 conv = converters.conversions
 
 conv[FIELD_TYPE.NEWDECIMAL] = float  # convert decimals to float
@@ -41,7 +43,7 @@ def convert(class_name: type, data):
         if hasattr(new_class, "after_init"):
             after_init = getattr(new_class, "after_init")
             after_init()
-        return new_class,other
+        return new_class, other
 
     return data, other
 
@@ -63,3 +65,22 @@ def convert_type(data, tm):
         return data
 
     return "'" + data + "'"
+
+
+def convert_class(json_str, obj_class):
+    if type(json_str) == str:
+        parse_data = json.loads(json_str.strip('\t\r\n'))
+    else:
+        parse_data = json_str
+    result = obj_class()
+    result.__dict__ = parse_data
+
+    return result
+
+
+def get_length(field: DbField):
+    if field.field == 'varchar':
+        return "%s(%s)".format(field.field, field.len)
+    if field.field == 'decimal':
+        return "%s(%s,%s)".format(field.field, field.len, field.pointLen)
+    return field.field
