@@ -79,8 +79,8 @@ def convert_class(json_str, obj_class):
 
 
 def get_length(field: DbField):
-    if field.field == 'varchar':
-        return "%s(%s)".format(field.field, field.len)
-    if field.field == 'decimal':
-        return "%s(%s,%s)".format(field.field, field.len, field.pointLen)
-    return field.field
+    if field.type == 'varchar':
+        return "{0}({1})".format(field.type, field.len)
+    if field.type == 'decimal':
+        return "{0}({1},{2})".format(field.type,field.len, field.pointLen)
+    return field.type

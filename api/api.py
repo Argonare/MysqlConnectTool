@@ -179,6 +179,7 @@ class API(System, Storage):
         change_list: list = other["changeList"]
         cmd = "alert table {0} ".format(data.table)
         alert_lis = []
+        print(change_list)
         for attr in change_list:
             field: DbField = convert_class(attr, DbField)
             if field.add is not None:
@@ -186,13 +187,14 @@ class API(System, Storage):
                            .format(field.field, get_length(field), field.comment))
                 alert_lis.append(content)
             else:
-                content = 'change ' if field.field is not None else 'modify column '
-                content += field.oldField + " "
-                if field.type is not None or field.len is not None or field.pointLen is not None:
-                    content += get_length(field) + " "
+                if field.field is not None:
+                    content = 'change {0} {1} {2} '.format(field.oldField, field.field, get_length(field))
+                else:
+                    content = 'modify {0} {1} '.format(field.oldField, get_length(field))
                 if field.isNull is not None:
                     content += ("null " if field.isNull is True else "not null ")
                 if field.comment is not None:
                     content += "comment '{0}'".format(field.comment)
-        print(content)
+                alert_lis.append(content)
+        print(alert_lis)
         return success()

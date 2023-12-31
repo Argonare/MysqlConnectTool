@@ -18,6 +18,7 @@ import Index from "./view/index.vue";
 .flexItem {
 	display: flex;
 	flex-wrap: wrap;
+	flex-direction: row;
 	height: 100%
 }
 .flexRow{
@@ -27,7 +28,6 @@ import Index from "./view/index.vue";
 .flexColumn {
 	display: flex;
 	flex-direction: column;
-	justify-content: center;
 }
 
 @font-face {

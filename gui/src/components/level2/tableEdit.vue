@@ -1,29 +1,8 @@
 <script setup>
-import {getCurrentInstance, nextTick, onMounted, reactive, ref} from "vue";
+import {getCurrentInstance, onMounted, reactive, ref} from "vue";
 
 onMounted(() => {
-	nextTick(() => {
-		proxy.$request("desc_table", route.query).then(data => {
-			tableData.value = []
-			data.forEach((e, index) => {
-				var reg = /[1-9][0-9]*/g
-				let matchRes = e.Type.match(reg)
-				let item = {
-					index: index,
-					field: e.Field,
-					type: e.Type.split("(")[0],
-					len: matchRes && matchRes.length > 0 ? matchRes[0] : null,
-					pointLen: matchRes && matchRes.length > 1 ? matchRes[1] : null,
-					isNull: e.Null === 'YES',
-					comment: emptyDefault(e.Comment),
-					hideFlag: false,
-					primary: e.Key === "PRI"
-				}
-				tableData.value.push(item)
-				tableMap[item["field"]] = JSON.parse(JSON.stringify(item))
-			})
-		})
-	})
+	getData()
 })
 
 import {emptyDefault} from "@/js/common";
@@ -31,33 +10,58 @@ import {useRoute} from "vue-router";
 
 
 const {proxy} = getCurrentInstance();
-const tableData = ref([{}])
+const ruleForm = ref({
+	tableData: []
+})
 const editX = ref(null)
 const editY = ref(null)
 const route = useRoute();
 let oldValue = null;
 let tableMap = {}
-
-
+const typeMap = reactive({})
 const changeList = {}
-const iptBlur = (scope, e, field) => {
+
+const getData = () => {
+	proxy.$request("desc_table", route.query).then(data => {
+		ruleForm.value.tableData = []
+		data.forEach((e, index) => {
+			var reg = /[1-9][0-9]*/g
+			let matchRes = e.Type.match(reg)
+			let item = {
+				index: index,
+				field: e.Field,
+				type: e.Type.split("(")[0],
+				len: matchRes && matchRes.length > 0 ? matchRes[0] : null,
+				pointLen: matchRes && matchRes.length > 1 ? matchRes[1] : null,
+				isNull: e.Null === 'YES',
+				comment: emptyDefault(e.Comment),
+				hideFlag: false,
+				primary: e.Key === "PRI"
+			}
+			ruleForm.value.tableData.push(item)
+			tableMap[item["field"]] = JSON.parse(JSON.stringify(item))
+		})
+	})
+}
+const iptBlur = async (scope, e, field) => {
+	let prop = `tableData.${scope.$index}.${field}`
+	const valid = await formRef.value.validateField([prop], async (valid) => await valid);
+	console.log(ruleForm.value.tableData[scope.$index])
+
 	let newValue = scope.row[scope.column.property]
 	//判断是否修改
 	if (oldValue[field] !== newValue) {
 		if (scope.row.field === null || scope.row.field === '') {
 			return;
 		}
-		if (changeList[scope.row.index] == null) {
-			changeList[scope.row.index] = {}
-		}
-		changeList[scope.row.index][field] = scope.row[field]
-		changeList[scope.row.index]["oldField"]=oldValue["field"]
+		changeList[scope.row.index] = scope.row
+		changeList[scope.row.index]["oldField"] = oldValue["field"]
 	}
 	editX.value = null
 	editY.value = null
 }
 const cellClick = (scope) => {
-	oldValue = JSON.parse(JSON.stringify(tableData.value[scope.$index]))
+	oldValue = JSON.parse(JSON.stringify(ruleForm.value.tableData[scope.$index]))
 	editX.value = scope.$index
 	editY.value = scope.column.no
 }
@@ -67,23 +71,23 @@ const changeFlag = (row, flag) => {
 const typeOption = ref([
 	{label: "varchar", hasLen: true, hasPoint: false, len: 255},
 	{label: "int", hasLength: true, hasPoint: false},
-	{label: "decimal", hasLength: true, hasPoint: true},
+	{label: "decimal", hasLength: true, hasPoint: true, len: 5, pointLen: 2},
 ])
-const typeMap = reactive({})
+
 typeOption.value.forEach(e => {
 	typeMap[e.label] = e
 })
 const add = () => {
-	let index = tableData.value.length > 0 ? (tableData.value[tableData.value.length - 1]["index"] + 1) : 0
+	let index = ruleForm.value.tableData.length > 0 ? (ruleForm.value.tableData[ruleForm.value.tableData.length - 1]["index"] + 1) : 0
 	let item = {primary: false, isNull: false, index: index, add: true}
-	tableData.value.push(item)
+	ruleForm.value.tableData.push(item)
 	changeList[item.index] = item
 }
 const pAdd = () => {
-	let index = tableData.value.length > 0 ? (tableData.value[tableData.value.length - 1]["index"] + 1) : 0
+	let index = ruleForm.value.tableData.length > 0 ? (ruleForm.value.tableData[ruleForm.value.tableData.length - 1]["index"] + 1) : 0
 	let item = {primary: false, isNull: false, index: index, add: true}
 
-	tableData.value.splice(activeRow.value, 0, item)
+	ruleForm.value.tableData.splice(activeRow.value, 0, item)
 	changeList[item.index] = item
 }
 
@@ -109,7 +113,11 @@ const selectedRow = ({row, rowIndex}) => {
 const icoClick = (row) => {
 	activeRow.value = row.index
 }
+const formRef = ref()
 const save = () => {
+	formRef.value.validate((valid, fields) => {
+		console.log(valid)
+	})
 	if (JSON.stringify(changeList) === "{}") {
 		return
 	}
@@ -132,6 +140,28 @@ const btnClick = (scope, flag) => {
 	changeFlag(scope.row, flag);
 	iptBlur(scope, null, flag)
 }
+const changeType = (data, row) => {
+	row.len = typeMap[data].len
+	row.pointLen = typeMap[data].pointLen
+}
+const rules = {
+	field: [
+		{required: true, message: '请输入字段名称', trigger: 'change'},
+	],
+	type: [
+		{required: true, message: '请选择字段类型', trigger: 'change'},
+	],
+	len: [
+		{required: true, min: 1, message: '请输入正确的长度', trigger: 'change'},
+	],
+	pointLen: [
+		{required: true, min: 1, message: '请输入小数点长度', trigger: 'change'},
+	],
+	comment: [
+		{required: true, message: '请输入备注', trigger: 'change'},
+	]
+}
+
 </script>
 
 <template>
@@ -163,83 +193,99 @@ const btnClick = (scope, flag) => {
 				<div class="barFont">删除字段</div>
 			</div>
 		</div>
-		<el-table :data="tableData" style="width: 100%" border class="subTable" :row-class-name="selectedRow"
-		          @cell-click="(row, column, cell, event)=>icoClick(row)">
-			<el-table-column width="40" align="center" prop="ico">
-				<template #default="scope">
-					<el-icon>
-						<ArrowRight/>
-					</el-icon>
-				</template>
-			</el-table-column>
-			<el-table-column prop="field" label="字段名" width="180">
-				<template #default="scope">
-					<el-input size="small" v-if="canEdit(scope)"
-					          v-model="scope.row.field" v-focus @blur="iptBlur(scope, $event,'field')"/>
-					<div v-else @click="cellClick(scope)" class="height20">{{ scope.row.field }}</div>
-				</template>
-			</el-table-column>
-			<el-table-column prop="type" label="类型" width="120">
-				<template #default="scope">
-					<el-select v-model="scope.row.type" size="small" placeholder="选择类型"
-					           v-if="canEdit(scope)">
-						<el-option
-							v-for="item in typeOption"
-							:key="item.label"
-							:label="item.label"
-							:value="item.label"
-						/>
-					</el-select>
-					<div v-else @click="cellClick(scope)" class="height20">{{ scope.row.type }}</div>
-				</template>
-			</el-table-column>
-			<el-table-column prop="len" label="长度" width="90">
-				<template #default="scope">
-					<el-input v-if="canEdit(scope,'hasLen')"
-					          size="small" v-model.number="scope.row.len" v-focus @blur="iptBlur(scope, $event,'len')"/>
-					<div v-else @click="cellClick(scope)" class="height20">{{ scope.row.len }}</div>
-				</template>
-			</el-table-column>
-			<el-table-column prop="pointLen" label="小数点" width="90">
-				<template #default="scope">
-					<el-input size="small" v-model.number="scope.row.pointLen" v-focus
-					          @blur="iptBlur(scope, $event,'pointLen')"
-					          v-if="canEdit(scope,'hasPoint')"/>
-					<div v-else @click="cellClick(scope)" class="height20">{{ scope.row.pointLen }}</div>
-				</template>
-			</el-table-column>
-			<el-table-column prop="isNull" label="是否null" width="90" align="center">
-				<template #default="scope">
-					<el-tag class="cursor yesTag" v-if="scope.row.isNull" :disable-transitions="true"
-					        @click="btnClick(scope,'isNull')">
-						是
-					</el-tag>
-					<el-tag class="cursor noTag" type="danger" v-else :disable-transitions="true"
-					        @click="btnClick(scope,'isNull')">
-						否
-					</el-tag>
-				</template>
-			</el-table-column>
-			<el-table-column prop="primary" label="主键" width="90">
-				<template #default="scope">
-					<el-tag class="cursor yesTag" v-if="scope.row.primary" :disable-transitions="true"
-					        @click="btnClick(scope,'primary')">
-						是
-					</el-tag>
-					<el-tag class="cursor noTag" type="danger" v-else :disable-transitions="true"
-					        @click="btnClick(scope,'primary')">
-						否
-					</el-tag>
-				</template>
-			</el-table-column>
-			<el-table-column prop="comment" label="注释">
-				<template #default="scope">
-					<el-input size="small" v-if="editX===scope.$index&& editY===scope.column.no"
-					          v-model="scope.row.comment" v-focus @blur="iptBlur(scope, $event,'comment')"/>
-					<div v-else @click="cellClick(scope)" class="height20">{{ scope.row.comment }}</div>
-				</template>
-			</el-table-column>
-		</el-table>
+		<el-form :model="ruleForm" ref="formRef">
+			<el-table :data="ruleForm.tableData" style="width: 100%" border class="subTable"
+			          :row-class-name="selectedRow"
+			          @cell-click="(row, column, cell, event)=>icoClick(row)">
+				<el-table-column width="40" align="center" prop="ico">
+					<template #default="scope">
+						<el-icon>
+							<ArrowRight/>
+						</el-icon>
+					</template>
+				</el-table-column>
+				<el-table-column prop="field" label="字段名" width="180">
+					<template #default="scope">
+						<el-form-item :prop="'tableData.' + scope.$index + '.field'" :rules="rules.name">
+							<el-input size="small" v-model="scope.row.field" v-focus v-if="canEdit(scope)"
+							          @blur="iptBlur(scope, $event,'field')"/>
+							<div @click="cellClick(scope)" class="height20" v-else>{{ scope.row.field }}</div>
+						</el-form-item>
+					</template>
+				</el-table-column>
+				<el-table-column prop="type" label="类型" width="120">
+					<template #default="scope">
+						<el-form-item :prop="'tableData.' + scope.$index + '.type'" :rules="rules.type">
+							<el-select v-model="scope.row.type" size="small" placeholder="选择类型"
+							           v-if="canEdit(scope)" @change="(data)=>changeType(data,scope.row)">
+								<el-option
+									v-for="item in typeOption"
+									:key="item.label"
+									:label="item.label"
+									:value="item.label"
+								/>
+							</el-select>
+							<div v-else @click="cellClick(scope)" class="height20">{{ scope.row.type }}</div>
+						</el-form-item>
+
+					</template>
+				</el-table-column>
+				<el-table-column prop="len" label="长度" width="90">
+					<template #default="scope">
+						<el-form-item :prop="'tableData.' + scope.$index + '.len'" :rules="rules.len">
+							<el-input v-if="canEdit(scope)"
+							          size="small" v-model.number="scope.row.len" v-focus
+							          @blur="iptBlur(scope, $event,'len')"/>
+							<div v-else @click="cellClick(scope)" class="height20">{{ scope.row.len }}</div>
+						</el-form-item>
+					</template>
+				</el-table-column>
+				<el-table-column prop="pointLen" label="小数点" width="90">
+					<template #default="scope">
+						<el-form-item :prop="'tableData.' + scope.$index + '.pointLen'"
+						              :rules="rules.pointLen">
+							<el-input size="small" v-model.number="scope.row.pointLen" v-focus
+							          @blur="iptBlur(scope, $event,'pointLen')"
+							          v-if="canEdit(scope,'hasPoint')"/>
+							<div v-else @click="cellClick(scope)" class="height20">{{ scope.row.pointLen }}</div>
+						</el-form-item>
+					</template>
+				</el-table-column>
+				<el-table-column prop="isNull" label="是否null" width="90" align="center">
+					<template #default="scope">
+						<el-tag class="cursor yesTag" v-if="scope.row.isNull" :disable-transitions="true"
+						        @click="btnClick(scope,'isNull')">
+							是
+						</el-tag>
+						<el-tag class="cursor noTag" type="danger" v-else :disable-transitions="true"
+						        @click="btnClick(scope,'isNull')">
+							否
+						</el-tag>
+					</template>
+				</el-table-column>
+				<el-table-column prop="primary" label="主键" width="90">
+					<template #default="scope">
+						<el-tag class="cursor yesTag" v-if="scope.row.primary" :disable-transitions="true"
+						        @click="btnClick(scope,'primary')">
+							是
+						</el-tag>
+						<el-tag class="cursor noTag" type="danger" v-else :disable-transitions="true"
+						        @click="btnClick(scope,'primary')">
+							否
+						</el-tag>
+					</template>
+				</el-table-column>
+				<el-table-column prop="comment" label="注释">
+					<template #default="scope">
+						<el-form-item :prop="'tableData.' + scope.$index + '.comment'" :rules="rules.comment">
+							<el-input size="small" v-if="editX===scope.$index&& editY===scope.column.no"
+							          v-model="scope.row.comment" v-focus @blur="iptBlur(scope, $event,'comment')"/>
+							<div v-else @click="cellClick(scope)" class="height20">{{ scope.row.comment }}</div>
+						</el-form-item>
+					</template>
+				</el-table-column>
+			</el-table>
+		</el-form>
 	</div>
 </template>
 
@@ -261,6 +307,7 @@ const btnClick = (scope, flag) => {
 
 .height20 {
 	min-height: 20px;
+	width: 100%;
 }
 
 /deep/ .el-input {
@@ -312,5 +359,9 @@ const btnClick = (scope, flag) => {
 		height: 100%;
 	}
 
+}
+
+/deep/ .el-form-item {
+	margin-bottom: 0 !important;
 }
 </style>
