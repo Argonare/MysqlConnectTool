@@ -45,8 +45,6 @@ const getData = () => {
 }
 const iptBlur = async (scope, e, field) => {
 	let prop = `tableData.${scope.$index}.${field}`
-	const valid = await formRef.value.validateField([prop], async (valid) => await valid);
-	console.log(ruleForm.value.tableData[scope.$index])
 
 	let newValue = scope.row[scope.column.property]
 	//判断是否修改
@@ -70,7 +68,7 @@ const changeFlag = (row, flag) => {
 }
 const typeOption = ref([
 	{label: "varchar", hasLen: true, hasPoint: false, len: 255},
-	{label: "int", hasLength: true, hasPoint: false},
+	{label: "int", hasLength: false, hasPoint: false},
 	{label: "decimal", hasLength: true, hasPoint: true, len: 5, pointLen: 2},
 ])
 
@@ -94,12 +92,13 @@ const pAdd = () => {
 
 const canEdit = (scope, field = null) => {
 	if (editX.value === scope.$index && editY.value === scope.column.no) {
+				if (typeMap[scope.row.type] && typeMap[scope.row.type][field]) {
+			return true;
+		}
 		if (field == null) {
 			return true;
 		}
-		if (typeMap[scope.row.type] && typeMap[scope.row.type][field]) {
-			return true;
-		}
+
 	}
 	return false;
 }
@@ -117,6 +116,8 @@ const formRef = ref()
 const save = () => {
 	formRef.value.validate((valid, fields) => {
 		console.log(valid)
+		console.log(fields)
+		console.log(ruleForm.value.tableData)
 	})
 	if (JSON.stringify(changeList) === "{}") {
 		return
@@ -131,9 +132,8 @@ const save = () => {
 
 
 	proxy.$request("alert_table", param).then(data => {
-		console.log(data)
+		changeList.value=[]
 	})
-	console.log(changeList)
 }
 const btnClick = (scope, flag) => {
 	cellClick(scope);
@@ -152,10 +152,10 @@ const rules = {
 		{required: true, message: '请选择字段类型', trigger: 'change'},
 	],
 	len: [
-		{required: true, min: 1, message: '请输入正确的长度', trigger: 'change'},
+		{required: true, min: 1, type: 'number', message: '请输入正确的长度', trigger: 'change',transform: (value) => Number(value)},
 	],
 	pointLen: [
-		{required: true, min: 1, message: '请输入小数点长度', trigger: 'change'},
+		{required: true, min: 1, type: 'number', message: '请输入小数点长度', trigger: 'change',transform: (value) => Number(value)},
 	],
 	comment: [
 		{required: true, message: '请输入备注', trigger: 'change'},
@@ -232,8 +232,9 @@ const rules = {
 				</el-table-column>
 				<el-table-column prop="len" label="长度" width="90">
 					<template #default="scope">
-						<el-form-item :prop="'tableData.' + scope.$index + '.len'" :rules="rules.len">
-							<el-input v-if="canEdit(scope)"
+						<el-form-item :prop="'tableData.' + scope.$index + '.len'"
+						              :rules="typeMap[scope.row.type]&&typeMap[scope.row.type].hasLen?rules.len:null">
+							<el-input v-if="canEdit(scope,'hasLen')"
 							          size="small" v-model.number="scope.row.len" v-focus
 							          @blur="iptBlur(scope, $event,'len')"/>
 							<div v-else @click="cellClick(scope)" class="height20">{{ scope.row.len }}</div>
@@ -243,7 +244,7 @@ const rules = {
 				<el-table-column prop="pointLen" label="小数点" width="90">
 					<template #default="scope">
 						<el-form-item :prop="'tableData.' + scope.$index + '.pointLen'"
-						              :rules="rules.pointLen">
+						              :rules="typeMap[scope.row.type]&&typeMap[scope.row.type].hasPoint?rules.pointLen:null">
 							<el-input size="small" v-model.number="scope.row.pointLen" v-focus
 							          @blur="iptBlur(scope, $event,'pointLen')"
 							          v-if="canEdit(scope,'hasPoint')"/>
@@ -320,6 +321,12 @@ const rules = {
 
 .subTable {
 	flex: 1;
+}
+
+/deep/ .cell:has(.el-form-item__error) .height20 {
+	padding: 0px 6px;
+	border-radius: 5px;
+	border: 1px solid red;
 }
 
 .topBar {

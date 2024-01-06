@@ -177,10 +177,12 @@ class API(System, Storage):
         if "changeList" not in other:
             return success()
         change_list: list = other["changeList"]
-        cmd = "alert table {0} ".format(data.table)
+        cmd = "alter table {0} ".format(data.table)
         alert_lis = []
         print(change_list)
         for attr in change_list:
+            if type(attr) != dict:
+                continue
             field: DbField = convert_class(attr, DbField)
             if field.add is not None:
                 content = ("add column {0} {1} default null comment '{2}'"
@@ -196,5 +198,7 @@ class API(System, Storage):
                 if field.comment is not None:
                     content += "comment '{0}'".format(field.comment)
                 alert_lis.append(content)
-        print(alert_lis)
+        if len(alert_lis) > 0:
+            self.cursor_data(db, cmd + ",".join(alert_lis) + ";")
+        print(cmd + ",".join(alert_lis))
         return success()
