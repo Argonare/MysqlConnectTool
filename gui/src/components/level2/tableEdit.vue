@@ -2,11 +2,13 @@
 import {getCurrentInstance, onMounted, reactive, ref} from "vue";
 
 onMounted(() => {
+
 	getData()
 })
 
 import {emptyDefault} from "@/js/common";
 import {useRoute} from "vue-router";
+import {ElMessage, ElMessageBox} from "element-plus";
 
 
 const {proxy} = getCurrentInstance();
@@ -22,6 +24,9 @@ const typeMap = reactive({})
 const changeList = {}
 
 const getData = () => {
+	if (route.query.table == null) {
+		return
+	}
 	proxy.$request("desc_table", route.query).then(data => {
 		ruleForm.value.tableData = []
 		data.forEach((e, index) => {
@@ -92,7 +97,7 @@ const pAdd = () => {
 
 const canEdit = (scope, field = null) => {
 	if (editX.value === scope.$index && editY.value === scope.column.no) {
-				if (typeMap[scope.row.type] && typeMap[scope.row.type][field]) {
+		if (typeMap[scope.row.type] && typeMap[scope.row.type][field]) {
 			return true;
 		}
 		if (field == null) {
@@ -113,12 +118,12 @@ const icoClick = (row) => {
 	activeRow.value = row.index
 }
 const formRef = ref()
-const save = () => {
-	formRef.value.validate((valid, fields) => {
-		console.log(valid)
-		console.log(fields)
-		console.log(ruleForm.value.tableData)
-	})
+const save = async () => {
+	let valid = await formRef.value.validate(async (valid) => await valid)
+	if (!valid) {
+		ElMessage.error('表格数据存在异常')
+		return
+	}
 	if (JSON.stringify(changeList) === "{}") {
 		return
 	}
@@ -130,10 +135,24 @@ const save = () => {
 
 	let param = {...route.query, ...{changeList: obj}}
 
+	if (route.query.table == null) {
+		ElMessageBox.prompt('提示', '请输入表名', {
+			confirmButtonText: '确定',
+			cancelButtonText: '取消',
+		}).then(({value}) => {
+			param.table = value
+			proxy.$request("add_table", param).then(data => {
+				changeList.value = []
+			})
+		})
+	} else {
 
-	proxy.$request("alert_table", param).then(data => {
-		changeList.value=[]
-	})
+		proxy.$request("alert_table", param).then(data => {
+			changeList.value = []
+		})
+	}
+
+
 }
 const btnClick = (scope, flag) => {
 	cellClick(scope);
@@ -152,10 +171,24 @@ const rules = {
 		{required: true, message: '请选择字段类型', trigger: 'change'},
 	],
 	len: [
-		{required: true, min: 1, type: 'number', message: '请输入正确的长度', trigger: 'change',transform: (value) => Number(value)},
+		{
+			required: true,
+			min: 1,
+			type: 'number',
+			message: '请输入正确的长度',
+			trigger: 'change',
+			transform: (value) => Number(value)
+		},
 	],
 	pointLen: [
-		{required: true, min: 1, type: 'number', message: '请输入小数点长度', trigger: 'change',transform: (value) => Number(value)},
+		{
+			required: true,
+			min: 1,
+			type: 'number',
+			message: '请输入小数点长度',
+			trigger: 'change',
+			transform: (value) => Number(value)
+		},
 	],
 	comment: [
 		{required: true, message: '请输入备注', trigger: 'change'},

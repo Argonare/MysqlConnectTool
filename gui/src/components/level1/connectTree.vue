@@ -160,9 +160,7 @@ const addTable = () => {
 	let connect_data = toRaw(currentData.parent.parent.data)
 	store.state.lastConnect = connect_data
 	connect_data.database = data.Database
-	connect_data.table = currentData.data.name
-	connect_data.nickName = data.name
-	delete connect_data.sql
+	connect_data.table=null
 	console.log(connect_data)
 	router.push({path: "/tableEdit", query: connect_data})
 }
@@ -170,7 +168,15 @@ const deleteTable = () => {
 
 }
 const editTable = () => {
-
+	let data = toRaw(currentData.parent.data)
+	let connect_data = toRaw(currentData.parent.parent.data)
+	store.state.lastConnect = connect_data
+	connect_data.database = data.Database
+	connect_data.table = currentData.data.name
+	connect_data.nickName = data.name
+	delete connect_data.sql
+	console.log(connect_data)
+	router.push({path: "/tableEdit", query: connect_data})
 }
 </script>
 <template>
@@ -190,8 +196,8 @@ const editTable = () => {
 	{{ showMenu }}
 	<div v-show="showMenu!=0" id="menu" class="menuDiv">
 		<div class="menuUl" v-if="showMenu==3">
-			<p @click="editTable">设计表</p>
 			<p @click="addTable">新建表</p>
+			<p @click="editTable">设计表</p>
 			<p @click="deleteTable">删除表</p>
 			<el-divider/>
 		</div>

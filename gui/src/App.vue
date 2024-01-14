@@ -37,4 +37,7 @@ import Index from "./view/index.vue";
 .cursor{
 	cursor: pointer;
 }
+.justCenter{
+	justify-content: center;
+}
 </style>

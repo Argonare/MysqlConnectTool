@@ -123,9 +123,11 @@ class API(System, Storage):
 
     @connect
     def desc_table(self, data: Connect, db, other):
-        cmd = "show full columns from  " + data.table
-        table_data = self.cursor_data(db, cmd)
-        return success(table_data)
+        if data.table is not None:
+            cmd = "show full columns from  " + data.table
+            table_data = self.cursor_data(db, cmd)
+            return success(table_data)
+        return success()
 
     @connect
     def update_table(self, data: Connect, db, other):
@@ -179,7 +181,6 @@ class API(System, Storage):
         change_list: list = other["changeList"]
         cmd = "alter table {0} ".format(data.table)
         alert_lis = []
-        print(change_list)
         for attr in change_list:
             if type(attr) != dict:
                 continue
@@ -201,4 +202,27 @@ class API(System, Storage):
         if len(alert_lis) > 0:
             self.cursor_data(db, cmd + ",".join(alert_lis) + ";")
         print(cmd + ",".join(alert_lis))
+        return success()
+
+    @connect
+    def add_table(self, data: Connect, db, other: dict):
+        if "changeList" not in other:
+            return success()
+        change_list: list = other["changeList"]
+
+        cmd = "create table {0} (".format(data.table)
+        alert_lis = []
+        for attr in change_list:
+            if type(attr) != dict:
+                continue
+            field: DbField = convert_class(attr, DbField)
+            content = (" `{0}` {1} {2} null comment '{3}'"
+                       .format(field.field, get_length(field), 'not' if not field.isNull else '', field.comment))
+
+            alert_lis.append(content)
+            if field.primary:
+                alert_lis.append("PRIMARY KEY (`{0}`)".format(field.field))
+
+        print(cmd + ",".join(alert_lis))
+        self.cursor_data(db, cmd + ",".join(alert_lis) + ")")
         return success()

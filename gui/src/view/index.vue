@@ -111,13 +111,13 @@ const openEditor = () => {
     <menu-item class="width100 menuClass"></menu-item>
     <div class="scroll width100">
         <el-col :span="24" class="flex" style="height: 62px">
-            <div class="flex flexColumn iconItem" @click="addConnect">
+            <div class="flex flexColumn iconItem justCenter" @click="addConnect">
                 <Connection class="btnIcon"/>
                 <div>
                     连接
                 </div>
             </div>
-            <div class="flex flexColumn iconItem" @click="openEditor">
+            <div class="flex flexColumn iconItem justCenter" @click="openEditor">
                 <Edit class="btnIcon"/>
                 <div>
                     查询
