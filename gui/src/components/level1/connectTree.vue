@@ -7,10 +7,12 @@ onMounted(() => {
 	window.addEventListener('pywebviewready', function () {
 		getSavedData()
 	})
+	if (window.pywebview) {
+		getSavedData()
+	}
 })
 import {useRouter} from "vue-router";
 import {useStore} from "vuex";
-
 
 const router = useRouter()
 const {proxy}: any = getCurrentInstance();
@@ -28,6 +30,7 @@ const getSavedData = async () => {
 		if (saved == null) {
 			return [];
 		}
+
 		saved.forEach((e, index) => {
 			e.id = index
 			tree.value!.append(e)
@@ -160,12 +163,23 @@ const addTable = () => {
 	let connect_data = toRaw(currentData.parent.parent.data)
 	store.state.lastConnect = connect_data
 	connect_data.database = data.Database
-	connect_data.table=null
-	console.log(connect_data)
+	connect_data.table = null
 	router.push({path: "/tableEdit", query: connect_data})
 }
-const deleteTable = () => {
 
+const deleteTable = () => {
+	let data = toRaw(currentData.parent.data)
+	let connect_data = toRaw(currentData.parent.parent.data)
+	store.state.lastConnect = connect_data
+	connect_data.database = data.Database
+	connect_data.table = currentData.data.name
+	connect_data.nickName = data.name
+	delete connect_data.sql
+
+	proxy.$request("drop_table", connect_data).then(data => {
+		currentData.parent.loaded = false
+		currentData.parent.expand()
+	})
 }
 const editTable = () => {
 	let data = toRaw(currentData.parent.data)

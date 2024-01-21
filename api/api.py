@@ -226,3 +226,9 @@ class API(System, Storage):
         print(cmd + ",".join(alert_lis))
         self.cursor_data(db, cmd + ",".join(alert_lis) + ")")
         return success()
+
+    @connect
+    def drop_table(self, data: Connect, db, other: dict):
+        cmd = "drop table {0} ".format(data.table)
+        self.cursor_data(db, cmd)
+        return success()
