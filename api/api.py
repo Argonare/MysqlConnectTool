@@ -72,14 +72,15 @@ class API(System, Storage):
         return success(saved)
 
     def save_config(self, data):
+        data[-1]["id"] = str(uuid.uuid4())
         path = os.environ['USERPROFILE'] + "/database/data.json"
         with open(path, 'w', encoding="utf-8") as f:
             f.write(json.dumps(data))
         return success()
 
-    def test_connect(self, data: Connect):
-        connect: Connect = convert(Connect, data)
-        db = create_connect(connect)
+    @connect
+    def test_connect(self, data: Connect, db, other):
+        db = create_connect(data)
         db.close()
         return success()
 

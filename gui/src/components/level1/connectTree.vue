@@ -3,6 +3,7 @@
 import {TreeOptionProps} from "element-plus/es/components/tree/src/tree.type";
 import {getCurrentInstance, onMounted, reactive, ref, toRaw} from "vue";
 
+
 onMounted(() => {
 	window.addEventListener('pywebviewready', function () {
 		getSavedData()
@@ -30,10 +31,13 @@ const getSavedData = async () => {
 		if (saved == null) {
 			return [];
 		}
+		console.log(saved)
+		saved.forEach((e) => {
 
-		saved.forEach((e, index) => {
-			e.id = index
-			tree.value!.append(e)
+			if (tree.value.getNode(e.id) == null) {
+				tree.value!.append(e)
+			}
+
 		})
 		tmpData = saved
 		store.state.connectList = saved
@@ -51,7 +55,6 @@ const refreshData = async () => {
 let data = reactive<Tree[]>([])
 
 const addData = (treeData: object) => {
-	treeData.id = data.length
 	tree.value!.append(treeData)
 	tmpData.push(treeData)
 	store.state.connectList = tmpData
