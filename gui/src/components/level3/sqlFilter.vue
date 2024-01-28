@@ -1,5 +1,5 @@
 <script setup>
-import {computed, ref, toRefs} from "vue";
+import {computed, ref, toRefs, watch} from "vue";
 import ListSearch from "@/components/level3/listSearch.vue";
 
 
@@ -7,8 +7,14 @@ const props = defineProps({
 	headerType: String,
 	tableColumn: Array
 })
-const emit = defineEmits(['getRes', "cancel"])
 const {headerType, tableColumn} = toRefs(props)
+watch(headerType, (newVal, oldValue) => {
+	searchParam.value.forEach(e => {
+		e.comment = newVal === 'en' ? e.enComment : e.cnComment
+	})
+})
+const emit = defineEmits(['getRes', "cancel"])
+
 const showFilter = ref(0)
 const searchParam = ref([])
 let listItemIndex = null
@@ -29,7 +35,6 @@ const applyFilter = () => {
 
 		res.push(param)
 	})
-	console.log(222)
 	emit('getRes', res.join(" "))
 }
 const clearFilter = () => {
@@ -110,24 +115,33 @@ const getSearchData = (data) => {
 }
 
 
-const addParam = () => {
-	console.log(222)
-	let e = tableColumn.value[0]
+const addParam = (column = null) => {
+	let e = column == null ? tableColumn.value[0] : column
 	searchParam.value.push({
-		"field": e.prop,
-		"cal": "=",
+		field: e.prop,
+		cal: "=",
 		value: "",
 		comment: headerType.value === 'en' ? e.prop : e.comment,
-		"seq": "and"
+		seq: "and",
+		cnComment: e.comment,
+		enComment: e.prop,
 	})
 }
-const switchFilter = () => {
-	showFilter.value = 1 - showFilter.value
+const switchFilter = (show = false) => {
+	if (show) {
+		showFilter.value = 1
+	} else {
+		showFilter.value = 1 - showFilter.value
+		if (searchParam.value.length === 0) {
+			addParam(null)
+		}
+	}
+
 }
-const removeItem=(index)=>{
-	searchParam.value.splice(index,1)
+const removeItem = (index) => {
+	searchParam.value.splice(index, 1)
 }
-defineExpose({switchFilter})
+defineExpose({switchFilter, addParam})
 </script>
 
 <template>
@@ -166,22 +180,22 @@ defineExpose({switchFilter})
 				</div>
 
 				<div class="flexItem addIcon" v-if="index===searchParam.length-1">
-					<el-icon @click="addParam">
+					<el-icon @click="addParam(null)">
 						<CirclePlus/>
 					</el-icon>
 
 				</div>
 				<div class="flexItem addIcon">
-					<el-icon @click="removeItem(index)" >
-					<Remove />
-				</el-icon>
+					<el-icon @click="removeItem(index)">
+						<Remove/>
+					</el-icon>
 
 				</div>
 
 			</div>
 		</div>
 		<div class="flexItem addIcon moreIco" v-if="searchParam.length===0">
-			<el-icon @click="addParam">
+			<el-icon @click="addParam(null)">
 				<CirclePlus/>
 			</el-icon>
 		</div>
@@ -247,6 +261,7 @@ defineExpose({switchFilter})
 
 	& .searchBtns {
 		width: 100%;
+
 		& > * {
 			padding: 0 0.3em;
 		}

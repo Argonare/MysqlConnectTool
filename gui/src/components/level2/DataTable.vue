@@ -141,7 +141,7 @@ document.onkeydown = function (e) {
 }
 //设置菜单出现的位置
 const showMenuPosition = (event) => {
-	let menu = document.querySelector("#menu");
+	let menu = document.querySelector("#dataMenu");
 	let item = menu.parentElement.parentElement.parentElement.parentElement.parentElement
 	showMenu.value = true
 	menu["style"].left = event.clientX - item.offsetLeft + "px";
@@ -335,6 +335,12 @@ const getFilter = (data) => {
 	whereData.value = data
 	getData()
 }
+const addToFilter = () => {
+	let name = modeData.property
+	let cl=tableColumn.filter(e=>e.prop===name)
+	sqlFilter.value.addParam(cl[0])
+	sqlFilter.value.switchFilter(true)
+}
 </script>
 
 <template>
@@ -393,12 +399,12 @@ const getFilter = (data) => {
 			<el-button :icon="Close" :disabled="changedFlag==0" @click="clearChange">取消</el-button>
 		</div>
 	</div>
-	<div v-show="showMenu" id="menu" class="menuDiv">
+	<div v-show="showMenu" id="dataMenu" class="menuDiv">
 		<div class="menuUl">
 			<p @click="setEmpty">设置为空白字符串</p>
 			<p @click="setNull">设置为 NULL</p>
-			<el-divider/>
-			<p @click="deleteLine" v-if="mode=='column'">添加到筛选</p>
+			<el-divider v-if="mode=='column'||mode=='row'"/>
+			<p @click="addToFilter" v-if="mode=='column'">添加到筛选</p>
 			<p @click="hideColumn" v-if="mode=='column'">隐藏本列</p>
 			<p @click="showAll" v-if="mode=='column'">显示全部</p>
 			<p @click="deleteLine" v-if="mode=='row'">删除 记录</p>
@@ -460,7 +466,7 @@ const getFilter = (data) => {
 }
 
 
-#menu {
+#dataMenu {
 	position: absolute;
 
 	.menuUl > p {
