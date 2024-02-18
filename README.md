@@ -42,6 +42,7 @@
 - [ ] 拍照生成表和数据（parse photo and generate table and data from photo）
 - [ ] 适配mybatis,包括运行，解析等（Adapt and generate mybatis sql xml,include run and parse）
 - [ ] 连接redis（connect redis）
+- [ ] 编辑模式和查询模式（直接代替sql查询？）（edit mode and select mode ,may replace select by sql?）
 
 其他的想到了再说（when I think of something new,I will add it to this list）
 
