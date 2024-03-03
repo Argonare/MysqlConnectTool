@@ -187,18 +187,20 @@ class API(System, Storage):
                 continue
             field: DbField = convert_class(attr, DbField)
             if field.add is not None:
-                content = ("add column {0} {1} default null comment '{2}'"
-                           .format(field.field, get_length(field), field.comment))
+                content = ("add column {0} {1} default ｛2｝ comment '{3}'"
+                           .format(field.field, get_length(field), check_null(field), field.comment))
                 alert_lis.append(content)
             else:
                 if field.field is not None:
                     content = 'change {0} {1} {2} '.format(field.oldField, field.field, get_length(field))
                 else:
                     content = 'modify {0} {1} '.format(field.oldField, get_length(field))
+
                 if field.isNull is not None:
                     content += ("null " if field.isNull is True else "not null ")
                 if field.comment is not None:
                     content += "comment '{0}'".format(field.comment)
+                content += " default " + check_null(field)
                 alert_lis.append(content)
         if len(alert_lis) > 0:
             self.cursor_data(db, cmd + ",".join(alert_lis) + ";")

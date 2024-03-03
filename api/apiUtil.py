@@ -82,5 +82,13 @@ def get_length(field: DbField):
     if field.type == 'varchar':
         return "{0}({1})".format(field.type, field.len)
     if field.type == 'decimal':
-        return "{0}({1},{2})".format(field.type,field.len, field.pointLen)
+        return "{0}({1},{2})".format(field.type, field.len, field.pointLen)
     return field.type
+
+
+def check_null(field: DbField):
+    if field.default is None or field.default.upper() == "NULL":
+        return 'null'
+    if field.type == 'decimal' or field.type == "int":
+        return str(field.default)
+    return "'" + str(field.default) + "'"

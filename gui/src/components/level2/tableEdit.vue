@@ -41,7 +41,8 @@ const getData = () => {
 				isNull: e.Null === 'YES',
 				comment: emptyDefault(e.Comment),
 				hideFlag: false,
-				primary: e.Key === "PRI"
+				primary: e.Key === "PRI",
+				default: e.Default == null ? 'NULL' : e.Default
 			}
 			ruleForm.value.tableData.push(item)
 			tableMap[item["field"]] = JSON.parse(JSON.stringify(item))
@@ -73,8 +74,8 @@ const changeFlag = (row, flag) => {
 }
 const typeOption = ref([
 	{label: "varchar", hasLen: true, hasPoint: false, len: 255},
-	{label: "int", hasLength: false, hasPoint: false},
-	{label: "decimal", hasLength: true, hasPoint: true, len: 5, pointLen: 2},
+	{label: "int", hasLen: false, hasPoint: false},
+	{label: "decimal", hasLen: true, hasPoint: true, len: 5, pointLen: 2},
 ])
 
 typeOption.value.forEach(e => {
@@ -97,6 +98,7 @@ const pAdd = () => {
 
 const canEdit = (scope, field = null) => {
 	if (editX.value === scope.$index && editY.value === scope.column.no) {
+		console.log(typeMap[scope.row.type][field])
 		if (typeMap[scope.row.type] && typeMap[scope.row.type][field]) {
 			return true;
 		}
@@ -134,7 +136,7 @@ const save = async () => {
 	}
 
 	let param = {...route.query, ...{changeList: obj}}
-
+	console.log(obj)
 	if (route.query.table == null) {
 		ElMessageBox.prompt('提示', '请输入表名', {
 			confirmButtonText: '确定',
@@ -237,7 +239,7 @@ const rules = {
 						</el-icon>
 					</template>
 				</el-table-column>
-				<el-table-column prop="field" label="字段名" width="180">
+				<el-table-column prop="field" label="字段名" width="150">
 					<template #default="scope">
 						<el-form-item :prop="'tableData.' + scope.$index + '.field'" :rules="rules.name">
 							<el-input size="small" v-model="scope.row.field" v-focus v-if="canEdit(scope)"
@@ -246,7 +248,7 @@ const rules = {
 						</el-form-item>
 					</template>
 				</el-table-column>
-				<el-table-column prop="type" label="类型" width="120">
+				<el-table-column prop="type" label="类型" width="100">
 					<template #default="scope">
 						<el-form-item :prop="'tableData.' + scope.$index + '.type'" :rules="rules.type">
 							<el-select v-model="scope.row.type" size="small" placeholder="选择类型"
@@ -263,7 +265,7 @@ const rules = {
 
 					</template>
 				</el-table-column>
-				<el-table-column prop="len" label="长度" width="90">
+				<el-table-column prop="len" label="长度" width="70">
 					<template #default="scope">
 						<el-form-item :prop="'tableData.' + scope.$index + '.len'"
 						              :rules="typeMap[scope.row.type]&&typeMap[scope.row.type].hasLen?rules.len:null">
@@ -274,7 +276,7 @@ const rules = {
 						</el-form-item>
 					</template>
 				</el-table-column>
-				<el-table-column prop="pointLen" label="小数点" width="90">
+				<el-table-column prop="pointLen" label="小数点" width="70">
 					<template #default="scope">
 						<el-form-item :prop="'tableData.' + scope.$index + '.pointLen'"
 						              :rules="typeMap[scope.row.type]&&typeMap[scope.row.type].hasPoint?rules.pointLen:null">
@@ -285,7 +287,16 @@ const rules = {
 						</el-form-item>
 					</template>
 				</el-table-column>
-				<el-table-column prop="isNull" label="是否null" width="90" align="center">
+				<el-table-column prop="default" label="默认值" width="90">
+					<template #default="scope">
+						<el-form-item :prop="'tableData.' + scope.$index + '.default'">
+							<el-input size="small" v-model="scope.row.default" v-focus v-if="canEdit(scope)"
+							          @blur="iptBlur(scope, $event,'default')"/>
+							<div @click="cellClick(scope)" class="height20" v-else>{{ scope.row.default }}</div>
+						</el-form-item>
+					</template>
+				</el-table-column>
+				<el-table-column prop="isNull" label="可为null" width="90" align="center">
 					<template #default="scope">
 						<el-tag class="cursor yesTag" v-if="scope.row.isNull" :disable-transitions="true"
 						        @click="btnClick(scope,'isNull')">
@@ -360,6 +371,9 @@ const rules = {
 	padding: 0px 6px;
 	border-radius: 5px;
 	border: 1px solid red;
+}
+/deep/ .cell:has(.el-select), /deep/ .cell:has(.el-input){
+	padding: 0 5px;
 }
 
 .topBar {

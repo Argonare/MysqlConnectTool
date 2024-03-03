@@ -19,8 +19,10 @@ class DbField(object):
     comment: str = None
     oldField: str = None
 
+    default: str = None
+
     def __init__(self, primary: bool = None, isNull: bool = None, add: bool = None, field: str = None, type: str = None,
-                 len: int = None, pointLen: int = None, comment: str = None, oldField: str = None):
+                 len: int = None, pointLen: int = None, comment: str = None, oldField: str = None, default: str = None):
         # 是否主键
         self.primary = primary
         # 是否为空
@@ -39,3 +41,4 @@ class DbField(object):
         self.comment = comment
         # 老的字段名 改字段名用
         self.oldField = oldField
+        self.default = default
