@@ -25,19 +25,29 @@ export default createStore({
             if (flag === 0) {
                 state.openTab.push(data);
             }
-
+            console.log(data)
 
         },
         // 删除tabs
         delete_tabs(state, route) {
             let index = 0;
+            let lastUrl = ""
+            let nowActiveUrl = ""
             for (let option of state.openTab) {
                 if (option.route === route) {
+                    if (state.activeIndex === option.route) {
+                        lastUrl = nowActiveUrl
+                    }
                     break;
                 }
+                nowActiveUrl = option.route
                 index++;
             }
             this.state.openTab.splice(index, 1);
+            if (lastUrl) {
+                state.activeIndex = lastUrl;
+            }
+
         },
         // 设置当前激活的tab
         set_active_index(state, index) {

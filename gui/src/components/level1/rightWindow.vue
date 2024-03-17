@@ -46,6 +46,21 @@ const tabRemove = (targetName) => {
 const getData = () => {
 	panel.value.getData()
 }
+//禁止鼠标中键
+document.addEventListener("mousedown", function (mouseEvent) {
+	if (mouseEvent.button != 1) {
+		return;
+	}
+	console.log(mouseEvent)
+	if (mouseEvent.target.className.indexOf("el-tabs__item")!=-1) {
+		let url=mouseEvent.target.id.replace("tab-","");
+		store.commit('delete_tabs', url);
+	}
+	mouseEvent.preventDefault();
+	mouseEvent.stopPropagation();
+});
+
+
 defineExpose({
 	getData
 })
