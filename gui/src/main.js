@@ -13,7 +13,6 @@ import {ElMessage} from 'element-plus'
 // 图标库 ElementPlus
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import store from "../store"
-import Vuex from 'vuex'
 import router from './route'
 
 import contextmenu from "v-contextmenu";
@@ -26,7 +25,6 @@ app.use(contextmenu)
 app.use(store)
 app.use(router)
 app.use(ElementPlus)
-
 
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
     app.component(key, component)

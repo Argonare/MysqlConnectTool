@@ -64,10 +64,7 @@ const confirmData = async (formEl: FormInstance | undefined) => {
 		emit("onReceiveMsg", getData());
 		formEl.resetFields()
 		dialogVisible.value = false
-		ElMessage({
-			message: '操作成功',
-			type: 'success',
-		})
+		ElMessage.success("操作成功")
 	})
 }
 

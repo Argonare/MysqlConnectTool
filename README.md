@@ -36,7 +36,7 @@
 - [x] 隐藏某列字段（hide someone field）
 - [ ] 筛选字段方案（Filter Field Scheme）
 - [ ] 更好的sql提示（better sql prompts）
-- [ ] 查看数据表语句（view sql how to create table or field）
+- [x] 查看数据表语句（view sql how to create table or field）
 - [ ] 查看数据库变更记录（view history of table or field changed）
 - [ ] 字段预设方案，如创建时间，创建人等（add preset scheme,like create_time,create by etc.）
 - [ ] 拍照生成表和数据（parse photo and generate table and data from photo）

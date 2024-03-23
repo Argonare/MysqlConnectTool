@@ -235,3 +235,9 @@ class API(System, Storage):
         cmd = "drop table {0} ".format(data.table)
         self.cursor_data(db, cmd)
         return success()
+
+    @connect
+    def show_table_sql(self, data: Connect, db, other: dict):
+        cmd = "show CREATE table {0} ".format(data.table)
+        result = self.cursor_data(db, cmd)
+        return success(result[0]["Create Table"])

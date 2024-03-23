@@ -365,6 +365,7 @@ const addToFilter = () => {
 	<sql-filter ref="sqlFilter" :header-type="headerType" :table-column="tableColumn" @get-res="getFilter"></sql-filter>
 	<el-table :data="tableData" border class="table" ref="table" :fit="true" table-layout='auto'
 	          @header-contextmenu=" ( column, event) =>HeaderRightClick(column, event,true)"
+	          @header-click="clearSelected"
 	          @contextmenu="()=>{}"
 	          :row-class-name="selectedRowClass"
 	          :scrollbar-always-on="true" :header-cell-class-name="selectedHeaderClass"
