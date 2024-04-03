@@ -1,0 +1,92 @@
+.CodeMirror-hints{
+    z-index:9999;
+    font-size: 15px;
+}
+.CodeMirror-hint  .autocomplete-div {
+    display: inline-block;
+    width: 100%;
+    position: relative;
+}
+.CodeMirror-hint .autocomplete-name {
+    display: inline-block;
+    width: 100%;
+}
+.CodeMirror-hint .autocomplete-hint {
+    color: #0088ff;
+    top: 0;
+    position: absolute;
+    right: 0;
+    font-size: 12px;
+    line-height: 22px;
+}
+.CodeMirror-hint-active .autocomplete-hint{
+    color: #f7ff00;
+}
+.CodeMirror-hint:hover:not(.CodeMirror-hint-active) {
+    background-color: #CACACA;
+}
+.CodeMirror-hint .autocomplete-hidden{
+    display: inline-block;
+    visibility: hidden;
+    font-size: 12px;
+    margin-left: 16px;
+}
+
+.CodeMirror-hints .match-char{
+    color: #ff5400;
+    font-weight: bold;
+}
+
+li.CodeMirror-hint-active {
+    background: #4c5257;
+}
+
+.CodeMirror-fullscreen {
+  height: 100%;
+  width: 100%;
+  z-index: 1002;
+}
+
+.CodeMirror-hints .more-info{
+  display: none;
+  position: fixed;
+  z-index: 1010;
+  background: #585858;
+  border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  border: 2px solid #cbcbcb;
+  width: 220px;
+  white-space: break-spaces;
+  max-height: 350px;
+  padding: 10px;
+  color: #fff;
+  font-size: 12px;
+  overflow: hidden;
+}
+.CodeMirror-hints .more-info-title{
+    font-weight: bold;
+    border-bottom: 2px solid #EEE;
+    margin-bottom: 5px;
+    font-size: 16px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+.CodeMirror-hints .more-info-body{
+    font-size: 12px;
+}
+
+
+.cm-invalidchar {
+    color: #8e8e8e;
+}
+.CodeMirror-hints .hint-type{
+    color: #A9A9A9;
+    font-size: 12px;
+}
+
+.CodeMirror-hint:hover:not(.CodeMirror-hint-active) .hint-type {
+  color: #828282; 
+}
