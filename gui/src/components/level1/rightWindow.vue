@@ -91,7 +91,7 @@ defineExpose({
 </template>
 
 <style scoped>
-/deep/ .el-tabs__content {
+:deep(.el-tabs__content) {
 	height: calc(100% - 40px);
 }
 
@@ -105,11 +105,11 @@ defineExpose({
 	height: 100%;
 }
 
-/deep/ .el-tabs__header {
+:deep(.el-tabs__header) {
 	margin-bottom: 0 !important;
 }
 
-/deep/ .el-tabs__header {
+:deep(.el-tabs__header) {
 	background: white;
 }
 </style>

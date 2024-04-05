@@ -336,7 +336,7 @@ const rules = {
 
 <style scoped>
 
-/deep/ .selectedRow {
+:deep(.selectedRow) {
 	background: #e7f2ff;
 }
 
@@ -355,7 +355,7 @@ const rules = {
 	width: 100%;
 }
 
-/deep/ .el-input {
+:deep(.el-input) {
 	font-size: 14px;
 }
 
@@ -367,12 +367,12 @@ const rules = {
 	flex: 1;
 }
 
-/deep/ .cell:has(.el-form-item__error) .height20 {
+:deep(.cell):has(.el-form-item__error) .height20 {
 	padding: 0px 6px;
 	border-radius: 5px;
 	border: 1px solid red;
 }
-/deep/ .cell:has(.el-select), /deep/ .cell:has(.el-input){
+:deep(.cell):has(.el-select), :deep(.cell):has(.el-input){
 	padding: 0 5px;
 }
 
@@ -404,7 +404,7 @@ const rules = {
 	}
 
 
-	/deep/ .el-icon {
+	:deep(.el-icon) {
 		align-self: center;
 		padding-right: 3px;
 	}
@@ -415,7 +415,7 @@ const rules = {
 
 }
 
-/deep/ .el-form-item {
+:deep(.el-form-item) {
 	margin-bottom: 0 !important;
 }
 </style>

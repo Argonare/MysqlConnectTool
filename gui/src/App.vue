@@ -1,7 +1,7 @@
 <template>
 	<div class="flexItem" @contextmenu="(e)=>{e.preventDefault();}" style="width: 100%">
 		<index></index>
-		<router-view></router-view>
+<!--		<router-view></router-view>-->
 	</div>
 </template>
 

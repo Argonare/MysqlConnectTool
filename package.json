@@ -5,6 +5,7 @@
   "description": "PPX是一款基于pywebview和PyInstaller框架，构建macOS和windows平台客户端的应用框架。本框架的视图层支持Vue、React、Angular、HTML中的任意一种，业务层采用本地Python+调用远程API。",
   "author": "潘高 <pangao1990@qq.com>",
   "scripts": {
+    "postinstall": "patch-package",
     "initComments": "清空缓存，配置环境",
     "init": "pnpm run clean && pnpm install && pnpm run initInstall",
     "clean": "pnpm add -D shx && shx rm -rf build gui/dist gui/node_modules gui/pnpm-lock.yaml pyapp/pyenv pyapp/spec/macos* pyapp/spec/windows* && pnpm prune",
@@ -63,6 +64,7 @@
     "@codemirror/theme-one-dark": "^6.1.2",
     "codemirror": "^5.65.16",
     "codemirror-editor-vue3": "^2.4.1",
+    "patch-package": "^8.0.0",
     "v-contextmenu": "^3.2.0",
     "vue-clipboard3": "^2.0.0",
     "vue-router": "^4.3.0",

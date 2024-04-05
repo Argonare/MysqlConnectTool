@@ -304,7 +304,7 @@ const searchInput = ref()
 	}
 }
 
-/deep/ .el-tree {
+:deep (.el-tree) {
 	min-width: 100%;
 	height: 100%;
 	display: inline-block !important;
@@ -340,7 +340,7 @@ const searchInput = ref()
 	}
 }
 
-/deep/ .el-divider {
+:deep(.el-divider) {
 	margin: 5px 0;
 	width: auto;
 }

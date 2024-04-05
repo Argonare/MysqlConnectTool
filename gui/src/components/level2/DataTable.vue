@@ -463,15 +463,15 @@ const addToFilter = () => {
 }
 
 
-/deep/ tr:hover > td {
+:deep(tr:hover) > td {
 	background-color: unset !important;
 }
 
-/deep/ tr:hover > td.selectedRow {
+:deep(tr:hover) > td.selectedRow {
 	background: #409EFF !important;
 }
 
-/deep/ .selectedRow {
+:deep(.selectedRow) {
 	background: #409EFF !important;
 	color: white;
 }
@@ -516,21 +516,21 @@ const addToFilter = () => {
 	height: 100%;
 }
 
-/deep/ .el-divider {
+:deep(.el-divider) {
 	margin: 5px 0;
 	width: auto;
 }
 
-/deep/ .changed {
+:deep(.changed) {
 	background: rgb(247, 236, 254);
 }
 
-/deep/ .headCell .cell {
+:deep(.headCell .cell) {
 	color: #333;
 	font-size: 10px;
 }
 
-/deep/ .ipt {
+:deep(.ipt) {
 	border: none;
 	outline: none;
 	padding: 0 5px;
@@ -538,34 +538,34 @@ const addToFilter = () => {
 	height: 23px;
 }
 
-/deep/ .el-popper {
+:deep(.el-popper) {
 	display: none !important;
 }
 
-/deep/ .iptDiv {
+:deep(.iptDiv) {
 	padding: 0 5px;
 	width: 100%;
 	display: list-item;
 }
 
-/deep/ .ipt:hover {
+:deep(.ipt):hover {
 	background: rgb(245, 247, 250);
 }
 
-/deep/ .subCell {
+:deep(.subCell) {
 	padding: 0;
 }
 
-/deep/ .subCell .cell {
+:deep(.subCell) .cell {
 	padding: 0;
 	height: 20px;
 }
 
-/deep/ .el-table__cell {
+:deep(.el-table__cell) {
 	height: 20px;
 }
 
-/deep/ .el-table__body {
+:deep(.el-table__body) {
 	padding-bottom: 1em;
 }
 
