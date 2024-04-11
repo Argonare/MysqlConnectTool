@@ -1,6 +1,5 @@
 <script setup>
 import {javascript} from "@codemirror/lang-javascript";
-import {oneDark} from "@codemirror/theme-one-dark";
 
 const extensions = [javascript()];
 import {
@@ -99,7 +98,7 @@ function getColsOfSchema(selfObj, queryVal, callbackHint) {
 </script>
 
 <template>
-	<textarea ref="codemirror" class="codemirror" id="sqlcontent"></textarea>
+	<textarea ref="codemirror" class="codemirror flex1" id="sqlcontent"></textarea>
 </template>
 
 <style scoped>

@@ -17,7 +17,7 @@ from functools import wraps
 import pymysql
 
 from api.apiUtil import *
-from api.apiUtil import convert, create_connect
+from api.apiUtil import convert, create_connect, success
 from api.model.dbField import DbField
 from api.storage import Storage
 from api.system import System
@@ -94,6 +94,7 @@ class API(System, Storage):
 
     @connect
     def get_table(self, data: Connect, db, other):
+
         cmd = "show tables"
         table: list = self.cursor_data(db, cmd)
         for i in table:

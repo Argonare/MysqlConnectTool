@@ -643,7 +643,7 @@ export function mybatisHandler(CodeMirror) {
 
 
 //创建编辑器
-export function createMybatisEditor(selfObj, id,refItem) {
+export function createMybatisEditor(selfObj, id, refItem) {
     var element = id;
     if (typeof id === "string") {
         element = document.getElementById(id);
@@ -658,12 +658,20 @@ export function createMybatisEditor(selfObj, id,refItem) {
         cursorHeight: 1,
         lineWrapping: true,
         readOnly: false,
-        theme: 'dracula',
+        theme: 'monakai',
+
         autofocus: true,
         matchTags: {bothTags: true},
         continueComments: "Enter",
         mode: "text/x-mybatis",
         sqlMode: "text/x-pgsql", //看sqlquery.js，没有的数据库照着现有的添加，很简单
+
+        highlightSelectionMatches: {
+            minChars: 2,
+            trim: true,
+            style: "matchhighlight",
+            showToken: false
+        },
         extraKeys: { // 触发按键
             "Ctrl-Q": "toggleComment",//注释
             "F11": function (cm) {//全屏
@@ -675,11 +683,11 @@ export function createMybatisEditor(selfObj, id,refItem) {
                 cm.replaceSelection(spaces);
             }
         },
-        specialChars: new RegExp(" ", "g"),
+        // specialChars: new RegExp(" ", "g"),
         //如下是需要关注的参数
         hintOptions: {
             completeSingle: false,  //关闭补全
-            closeOnUnfocus: false,//失去焦点自动关闭，true是，false否
+            closeOnUnfocus: true,//失去焦点自动关闭，true是，false否
             autoCamelCases: true,//字段追加驼峰格式
             limitTableNum: 25, //表的最大提示数量，默认50
             limitNum: 100,//最大提示数量，默认200

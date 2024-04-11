@@ -90,3 +90,16 @@ li.CodeMirror-hint-active {
 .CodeMirror-hint:hover:not(.CodeMirror-hint-active) .hint-type {
   color: #828282; 
 }
+
+:deep(.CodeMirror pre){
+    font-size: 20px;
+}
+:deep(.cm-keyword){
+    color: #409EFF;
+}
+:deep(.cm-operator){
+    color: #606266;
+}
+.CodeMirror{
+    flex:1
+}

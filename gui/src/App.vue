@@ -15,6 +15,9 @@ import Index from "./view/index.vue";
 
 
 <style>
+*{
+    font-family: PingFang SC;
+}
 .flexItem {
 	display: flex;
 	flex-wrap: wrap;
@@ -31,8 +34,8 @@ import Index from "./view/index.vue";
 }
 
 @font-face {
-	font-family: 'PingFangSC-Regular';
-	src: url('./assets/font/PingFang Regular.ttf');
+	font-family: 'PingFang SC';
+	src: url('./assets/font/pfMedium.woff2');
 }
 .cursor{
 	cursor: pointer;
@@ -40,4 +43,5 @@ import Index from "./view/index.vue";
 .justCenter{
 	justify-content: center;
 }
+
 </style>

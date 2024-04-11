@@ -13,4 +13,7 @@ class Connect:
         self.add = add
 
     def after_init(self):
-        self.name = self.ip + ":" + str(self.port)
+        if self.ip is not None and self.port is not None:
+            self.name = self.ip + ":" + str(self.port)
+        else:
+            self.name = ""
