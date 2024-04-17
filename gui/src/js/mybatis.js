@@ -3,7 +3,6 @@
 
 //mytatis模式定义
 export function mybatisHandler(CodeMirror) {
-    console.log(CodeMirror)
     var mybatisConfig = {
         autoSelfClosers: {
             'cache-ref': true, 'cache': true, /*'include': true,*/'parameter': true

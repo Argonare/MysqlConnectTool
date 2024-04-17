@@ -30,7 +30,7 @@ const getSavedData = async () => {
     proxy.$request("get_config", {}).then(data => {
         data.forEach(e => {
             e = <Tree>e
-            e.showName=e.name
+            e.showName = e.name
         })
         let saved: Tree[] = data
         if (saved == null) {
@@ -122,7 +122,7 @@ const loadNode = (node: Node, resolve: (data: Tree[]) => void) => {
         proxy.$request("get_database", toRaw(node.data)).then(data => {
             data.forEach(e => {
                 e = <Tree>e
-                e.showName=e.name
+                e.showName = e.name
             })
             return resolve(data)
         })
@@ -132,10 +132,10 @@ const loadNode = (node: Node, resolve: (data: Tree[]) => void) => {
         proxy.$request("get_table", d).then(data => {
             data.forEach(e => {
                 e = <Tree>e
-                if(e.comment){
-                    e.showName=`${e.comment}(${e.name})`
-                }else{
-                    e.showName=e.name
+                if (e.comment) {
+                    e.showName = `${e.comment}(${e.name})`
+                } else {
+                    e.showName = e.name
                 }
             })
             return resolve(data)

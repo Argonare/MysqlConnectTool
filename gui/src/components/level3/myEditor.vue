@@ -97,8 +97,13 @@ function getColsOfSchema(selfObj, queryVal, callbackHint) {
 const getContent=()=>{
     return editorItem.getValue()
 }
+
+const setContent=(content)=>{
+    editorItem.setValue(content)
+}
 defineExpose({
-    getContent
+    getContent,
+    setContent
 })
 
 </script>

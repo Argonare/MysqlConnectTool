@@ -8,19 +8,28 @@ import 'codemirror/theme/solarized.css'
 import 'codemirror/theme/monokai.css'
 import 'codemirror/addon/search/match-highlighter'
 import {TreeOptionProps} from "element-plus/es/components/tree/src/tree.type";
+import {sqlFieldType, sqlFieldMap} from "@/js/common";
 
 const {proxy}: any = getCurrentInstance();
 const store = useStore()
 const code = ref(``);
 
 const connectList = ref(store.state.connectList)
+
+onMounted(() => {
+    if (connectList.value.length > 0) {
+        connect.value = connectList.value[0]
+        refreshDatabase(connectList.value[0])
+    }
+})
+
 const databaseList = ref([])
 const connect = ref(null)
 const database = ref(null)
 const tableData = ref([])
 const tableColumn = ref([])
 const showSubTable = ref(false)
-const editor=ref()
+const editor = ref()
 const ht = ref(300)
 
 // calHeight()
@@ -32,7 +41,6 @@ let connectParam = {}
 function calHeight() {
     nextTick(() => {
         ht.value = document.querySelector('.codemirror').parentElement.clientHeight * 0.5
-        console.log(document.querySelector('.codemirror').parentElement.clientHeight)
     })
 }
 
@@ -81,7 +89,6 @@ const filterText = ref()
 const tree = ref()
 const changeActive = (data) => {
     connectParam["database"] = data
-    console.log(connectParam)
     proxy.$request("get_table", connectParam).then(data => {
         treeData.value = data.map(e => {
             if (e.comment) {
@@ -111,8 +118,7 @@ watch(filterText, (val) => {
 })
 //################################ 头部工具栏 ###############################
 const runSql = () => {
-    let param=JSON.parse(JSON.stringify(connectParam))
-    console.log(editor.value.getContent())
+    let param = JSON.parse(JSON.stringify(connectParam))
     param["sql"] = editor.value.getContent()
     param["pageSize"] = pageSize
     param["currentPage"] = currentPage
@@ -122,22 +128,65 @@ const runSql = () => {
         tableColumn.value = data.column
         count = data.count
         showSubTable.value = true
-        console.log(data)
     })
 }
 const explainSql = () => {
-    let param=JSON.parse(JSON.stringify(connectParam))
+    let param = JSON.parse(JSON.stringify(connectParam))
     param["sql"] = editor.value.getContent()
-
     proxy.$request("explain_sql", param).then(data => {
+        let column = []
+        for (let item in data[0]) {
+            column.push({"Field": item})
+        }
+
         showSubTable.value = true
-        tableData.value = data.data
-        tableColumn.value = data.column
+        tableData.value = data
+        tableColumn.value = column
         showSubTable.value = true
     })
 }
+//################# 右键菜单 ######################
+let currentData = null;
+const showMenuPosition = (event, data, node: Node) => {
+    currentData = node
+    showMenu.value = data.level
+    let menu = document.querySelector("#sqlMenu");
+    let item = document.querySelector("#right-content");
 
 
+    menu["style"].left = event.clientX - item.offsetLeft + "px";
+    menu["style"].top = event.clientY - item.offsetTop - 40 + "px";
+    // 改变自定义菜单的隐藏与显示
+    menu["style"].display = "block";
+    menu["style"].zIndex = 1000;
+}
+document.addEventListener('click', e => {
+    showMenu.value = 0
+})
+const showMenu = ref(0)
+const selectSql = () => {
+    editor.value.setContent(`select *
+                             from ${currentData.data.name}`)
+}
+const insertSql = () => {
+    let param = JSON.parse(JSON.stringify(connectParam))
+    param["table"] = currentData.data.name
+    proxy.$request("desc_table", param).then(data => {
+        let values=data.map(e=>{
+            let type=e.Type.split("(")[0]
+            if(sqlFieldMap[type]){
+                return sqlFieldMap[type].defaultValue
+            }else{
+                return 'null'
+            }
+        })
+        console.log(values)
+        let sql = `insert into ${currentData.data.name}(${data.map(e => e.Field).join(",")})
+                   values (${values.join(",")})`
+        editor.value.setContent(sql)
+    })
+
+}
 </script>
 
 <template>
@@ -168,6 +217,7 @@ const explainSql = () => {
                          ref="tree"
                          :highlight-current="true"
                          :filter-node-method="filterNode"
+                         @node-contextmenu="showMenuPosition"
                          empty-text=""/>
             </el-scrollbar>
         </div>
@@ -179,7 +229,9 @@ const explainSql = () => {
             <my-editor ref="editor"></my-editor>
             <div class="subTable" v-show="showSubTable">
                 <div style="padding: 0.5em">
-                    <el-icon class="hideTable"><ArrowDown /></el-icon>
+                    <el-icon class="hideTable">
+                        <ArrowDown/>
+                    </el-icon>
                     <el-table :data="tableData" border class="table" ref="table" :fit="true"
                               :highlight-current-row="true" :height="ht"
                               :scrollbar-always-on="true">
@@ -208,6 +260,13 @@ const explainSql = () => {
                 </div>
             </div>
         </div>
+        <div v-show="showMenu!=0" id="sqlMenu" class="menuDiv">
+            <div class="menuUl" v-if="showMenu==3">
+                <p @click="selectSql">生成select</p>
+                <p @click="insertSql">生成insert</p>
+                <p @click="selectSql">生成delete</p>
+            </div>
+        </div>
     </div>
 
 </template>
@@ -216,9 +275,11 @@ const explainSql = () => {
 :deep(.cm-content) {
     cursor: text;
 }
-.hideTable{
+
+.hideTable {
 
 }
+
 .operateRow {
     background: white;
     padding: 2px;
@@ -263,6 +324,37 @@ const explainSql = () => {
     padding: 5px;
     height: calc(100% - 10px);
 }
+
+#sqlMenu {
+    position: absolute;
+
+    .menuUl > p {
+        margin: 0;
+        cursor: pointer;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.47);
+        padding: 5px 1.5em;
+        font-size: 12px;
+
+        &:hover {
+            background-color: #eee;
+        }
+    }
+
+    .menuUl {
+        min-width: 70px;
+        height: auto;
+        font-size: 14px;
+        text-align: left;
+        border-radius: 3px;
+        background-color: #fff;
+        color: black;
+        list-style: none;
+        border: 1px solid #ccc;
+        padding: 0;
+
+    }
+}
+
 
 </style>
 <style src="@/css/sqlquery.css"></style>

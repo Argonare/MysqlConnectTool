@@ -6,7 +6,7 @@ onMounted(() => {
 	getData()
 })
 
-import {emptyDefault} from "@/js/common";
+import {emptyDefault,sqlFieldType} from "@/js/common";
 import {useRoute} from "vue-router";
 import {ElMessage, ElMessageBox} from "element-plus";
 
@@ -72,11 +72,7 @@ const cellClick = (scope) => {
 const changeFlag = (row, flag) => {
 	row[flag] = !row[flag]
 }
-const typeOption = ref([
-	{label: "varchar", hasLen: true, hasPoint: false, len: 255},
-	{label: "int", hasLen: false, hasPoint: false},
-	{label: "decimal", hasLen: true, hasPoint: true, len: 5, pointLen: 2},
-])
+const typeOption = ref(sqlFieldType)
 
 typeOption.value.forEach(e => {
 	typeMap[e.label] = e

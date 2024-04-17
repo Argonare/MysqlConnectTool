@@ -103,3 +103,6 @@ li.CodeMirror-hint-active {
 .CodeMirror{
     flex:1
 }
+.CodeMirror-scroll{
+    width: 100%;
+}
