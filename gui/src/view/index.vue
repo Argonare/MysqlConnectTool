@@ -124,7 +124,7 @@ const openEditor = () => {
                 </div>
             </div>
         </el-col>
-        <el-col :span="24" class="flex height100 ">
+        <el-col :span="24" class="flex heightMax ">
             <div class=" white" id="left-tree">
                 <connect-tree ref="connectTree"></connect-tree>
                 <div id="resize" class="resize" title="收缩侧边栏">⋮</div>
@@ -199,11 +199,7 @@ footer {
     height: 60px;
 }
 
-.width100 {
-    width: 100%;
-}
-
-.height100 {
+.heightMax {
     height: calc(100% - 65px)
 }
 

@@ -106,3 +106,6 @@ li.CodeMirror-hint-active {
 .CodeMirror-scroll{
     width: 100%;
 }
+.CodeMirror {
+  font-size: 20px;
+}

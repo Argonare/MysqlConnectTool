@@ -650,7 +650,7 @@ export function createMybatisEditor(selfObj, id, refItem) {
     var sqlEditor = CodeMirror.fromTextArea(refItem, {
         autoRefresh: true,
         styleActiveLine: true,
-        indentWithTabs: false,
+        indentWithTabs: true,
         smartIndent: true,
         lineNumbers: true,
         matchBrackets: true,
@@ -678,11 +678,24 @@ export function createMybatisEditor(selfObj, id, refItem) {
             },
             "' '": "completeIfInTag",//标签属性
             "Tab": function (cm) {
-                var spaces = Array(cm.getOption("indentUnit") + 1).join(" ");
+                var spaces = Array(cm.getOption("indentUnit") * 4).join(" ");
                 cm.replaceSelection(spaces);
             }
         },
-        // specialChars: new RegExp(" ", "g"),
+        specialChars: new RegExp("[\'()]", "g"),
+        specialCharPlaceholder: function (ch) {
+            console.log(ch)
+            let token = document.createElement("span");
+            let content = ch + " ";
+            token.className = "cm-invalidchar";
+            if (typeof content == "string") {
+                token.appendChild(document.createTextNode(content));
+            }
+            token.title = "\\u" + ch.charCodeAt(0).toString(16);
+            token.setAttribute("aria-label", token.title);
+            return token
+        },
+
         //如下是需要关注的参数
         hintOptions: {
             completeSingle: false,  //关闭补全

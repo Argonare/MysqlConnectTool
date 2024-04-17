@@ -98,7 +98,7 @@ const changeActive = (data) => {
             }
             return e
         })
-
+        
     })
 }
 let treeData = ref()
@@ -120,6 +120,9 @@ watch(filterText, (val) => {
 const runSql = () => {
     let param = JSON.parse(JSON.stringify(connectParam))
     param["sql"] = editor.value.getContent()
+    if (!param["sql"]) {
+        return;
+    }
     param["pageSize"] = pageSize
     param["currentPage"] = currentPage
     proxy.$request("exec_sql", param).then(data => {
@@ -133,12 +136,15 @@ const runSql = () => {
 const explainSql = () => {
     let param = JSON.parse(JSON.stringify(connectParam))
     param["sql"] = editor.value.getContent()
+    if (!param["sql"]) {
+        return;
+    }
     proxy.$request("explain_sql", param).then(data => {
         let column = []
         for (let item in data[0]) {
             column.push({"Field": item})
         }
-
+        
         showSubTable.value = true
         tableData.value = data
         tableColumn.value = column
@@ -152,8 +158,8 @@ const showMenuPosition = (event, data, node: Node) => {
     showMenu.value = data.level
     let menu = document.querySelector("#sqlMenu");
     let item = document.querySelector("#right-content");
-
-
+    
+    
     menu["style"].left = event.clientX - item.offsetLeft + "px";
     menu["style"].top = event.clientY - item.offsetTop - 40 + "px";
     // 改变自定义菜单的隐藏与显示
@@ -165,28 +171,30 @@ document.addEventListener('click', e => {
 })
 const showMenu = ref(0)
 const selectSql = () => {
-    editor.value.setContent(`select *
-                             from ${currentData.data.name}`)
+    editor.value.setContent('select * from ' + currentData.data.name)
 }
 const insertSql = () => {
     let param = JSON.parse(JSON.stringify(connectParam))
     param["table"] = currentData.data.name
     proxy.$request("desc_table", param).then(data => {
-        let values=data.map(e=>{
-            let type=e.Type.split("(")[0]
-            if(sqlFieldMap[type]){
+        let values = data.map(e => {
+            let type = e.Type.split("(")[0]
+            if (sqlFieldMap[type]) {
                 return sqlFieldMap[type].defaultValue
-            }else{
+            } else {
                 return 'null'
             }
         })
-        console.log(values)
         let sql = `insert into ${currentData.data.name}(${data.map(e => e.Field).join(",")})
                    values (${values.join(",")})`
         editor.value.setContent(sql)
     })
-
 }
+const deleteSql = () => {
+    editor.value.setContent('delete from ' + currentData.data.name + ' where 2 = 1')
+}
+
+
 </script>
 
 <template>
@@ -221,7 +229,7 @@ const insertSql = () => {
                          empty-text=""/>
             </el-scrollbar>
         </div>
-        <div class="flexColumn flex1">
+        <div class="flexColumn flex1 widthMax">
             <div class="operateRow">
                 <el-link :icon="VideoPlay" @click="runSql" size="small" :underline="false">运行</el-link>
                 <el-link :icon="Grid" @click="explainSql" size="small" :underline="false">解释</el-link>
@@ -264,7 +272,7 @@ const insertSql = () => {
             <div class="menuUl" v-if="showMenu==3">
                 <p @click="selectSql">生成select</p>
                 <p @click="insertSql">生成insert</p>
-                <p @click="selectSql">生成delete</p>
+                <p @click="deleteSql">生成delete</p>
             </div>
         </div>
     </div>
@@ -276,8 +284,8 @@ const insertSql = () => {
     cursor: text;
 }
 
-.hideTable {
-
+.widthMax {
+    width: calc(100% - 200px);
 }
 
 .operateRow {
@@ -285,6 +293,7 @@ const insertSql = () => {
     padding: 2px;
     gap: 5px;
     display: flex;
+    border-bottom: 1px solid #ddd;
 }
 
 :deep(.el-link) {
@@ -304,7 +313,7 @@ const insertSql = () => {
     bottom: 0;
     width: 100%;
     background: white;
-
+    
     min-height: 200px;
 }
 
@@ -327,19 +336,19 @@ const insertSql = () => {
 
 #sqlMenu {
     position: absolute;
-
+    
     .menuUl > p {
         margin: 0;
         cursor: pointer;
         border-bottom: 1px solid rgba(255, 255, 255, 0.47);
         padding: 5px 1.5em;
         font-size: 12px;
-
+        
         &:hover {
             background-color: #eee;
         }
     }
-
+    
     .menuUl {
         min-width: 70px;
         height: auto;
@@ -351,7 +360,7 @@ const insertSql = () => {
         list-style: none;
         border: 1px solid #ccc;
         padding: 0;
-
+        
     }
 }
 
