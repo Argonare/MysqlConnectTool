@@ -17,6 +17,7 @@ import 'codemirror/addon/hint/show-hint.js'
 
 import {onMounted, ref} from "vue";
 const codemirror = ref()
+let editorItem;
 onMounted(() => {
 	mybatisHandler(CodeMirror)
 	mybatisHintHandler(CodeMirror)
@@ -31,7 +32,7 @@ onMounted(() => {
 		sqlEditor: null, //sql编辑器
 		hintOptions: null, //提示框hint对象
 	};
-	createMybatisEditor(selfObj, "codemirror", codemirror.value);
+	editorItem=createMybatisEditor(selfObj, "codemirror", codemirror.value);
 	keypressSqlEditor(selfObj, getColsOfSchema, getTablesOfSchema);
 });
 
@@ -93,7 +94,12 @@ function getColsOfSchema(selfObj, queryVal, callbackHint) {
 	//接口返回处理完成执行回调
 	callbackHint(sqlTables);
 }
-
+const getContent=()=>{
+    return editorItem.getValue()
+}
+defineExpose({
+    getContent
+})
 
 </script>
 

@@ -47,6 +47,11 @@ class API(System, Storage):
         data: list = cursor.fetchall()
         return data
 
+    def get_cursor(self, db, cmd):
+        cursor = db.cursor()
+        cursor.execute(cmd)
+        return cursor
+
     def __init__(self):
         self.db_connect = {}
 
@@ -95,10 +100,12 @@ class API(System, Storage):
     @connect
     def get_table(self, data: Connect, db, other):
 
-        cmd = "show tables"
+        cmd = 'SELECT table_name,table_comment  FROM information_schema.TABLES WHERE TABLE_SCHEMA = "{0}"'.format(
+            data.database)
         table: list = self.cursor_data(db, cmd)
         for i in table:
             i["name"] = i[list(i.keys())[0]]
+            i["comment"] = i[list(i.keys())[1]]
             i["leaf"] = True
             i["level"] = 3
             i["id"] = str(uuid.uuid4())
@@ -159,12 +166,13 @@ class API(System, Storage):
         if "limit" not in cmd:
             cmd = cmd + " limit " + str(start_position) + "," + str(page_size)
 
-        table_data = self.cursor_data(db, cmd)
+        cursor = self.get_cursor(db, cmd)
+
         db.commit()
+        table_data = cursor.fetchall()
 
-        cmd = "desc " + data.table
-        table_column = self.cursor_data(db, cmd)
 
+        table_column = [{"Field":column[0]} for column in cursor.description]
         return success({"data": table_data, "column": table_column, "count": count_data})
 
     @connect
@@ -242,3 +250,9 @@ class API(System, Storage):
         cmd = "show CREATE table {0} ".format(data.table)
         result = self.cursor_data(db, cmd)
         return success(result[0]["Create Table"])
+
+    @connect
+    def explain_sql(self, data: Connect, db, other: dict):
+        cmd = "explain {0} ".format(other["sql"])
+        result = self.cursor_data(db, cmd)
+        return success(result)

@@ -43,5 +43,7 @@ import Index from "./view/index.vue";
 .justCenter{
 	justify-content: center;
 }
-
+.height100{
+    height: 100%;
+}
 </style>
