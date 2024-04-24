@@ -2,7 +2,7 @@
 
 import {getCurrentInstance, nextTick, onMounted, reactive, ref, toRaw, watch} from "vue";
 import {useStore} from "vuex";
-import {Grid, VideoPlay} from "@element-plus/icons-vue";
+import {ArrowUp, Grid, Switch, VideoPlay} from "@element-plus/icons-vue";
 import MyEditor from "@/components/level3/myEditor.vue";
 import 'codemirror/theme/solarized.css'
 import 'codemirror/theme/monokai.css'
@@ -51,15 +51,6 @@ const refreshDatabase = (item) => {
     })
 }
 
-if (store.state.lastConnect != null && JSON.stringify(store.state.lastConnect) != '{}') {
-    let item = store.state.lastConnect
-    connect.value = item.name
-    connectParam = item
-    refreshDatabase(item)
-    database.value = item.database
-    code.value = "select * from " + item.table
-}
-
 
 const flexWidth = (title, fontSize = 16) => {
     if (tableData.value.length === 0) { //表格没数据不做处理
@@ -70,7 +61,8 @@ const flexWidth = (title, fontSize = 16) => {
     let context = canvas.getContext("2d");
     context.font = fontSize + "px PingFangSC-Regular";
     let trueWidth = context.measureText("这里放了六字").width
-    titleWidth = context.measureText("title").width
+    titleWidth = context.measureText(title).width
+    
     if (trueWidth < titleWidth) {
         trueWidth = titleWidth
     }
@@ -194,25 +186,33 @@ const deleteSql = () => {
     editor.value.setContent('delete from ' + currentData.data.name + ' where 2 = 1')
 }
 
+//############################ 初始化的 ###############################
+
+if (store.state.lastConnect != null && JSON.stringify(store.state.lastConnect) != '{}') {
+    let item = store.state.lastConnect
+    connect.value = item.name
+    connectParam = item
+    refreshDatabase(item)
+    database.value = item.database
+    changeActive(item.database)
+    code.value = "select * from " + item.table
+}
+
 
 </script>
 
 <template>
     <div class="flexRow flex1 height100">
         <div class="flexColumn leftOperate">
-            <el-select v-model="connect" class="m2" placeholder="选择连接"
+            <el-select v-model="connect" placeholder="选择连接"
                        :collapse-tags-tooltip="true" value-key="id" @change="refreshDatabase">
-                <el-option v-for="item in connectList"
-                           :key="item.id" :label="item.name" :value="item"/>
+                <el-option v-for="item in connectList" :key="item.id" :label="item.name" :value="item"/>
             </el-select>
-            <el-select v-model="database" class="m2" placeholder="选择数据库" :collapse-tags-tooltip="true"
+            <el-select v-model="database" placeholder="选择数据库" :collapse-tags-tooltip="true"
                        @change="changeActive">
                 <el-option
-                    v-for="item in databaseList"
-                    :key="item.name"
-                    :label="item.name"
-                    :value="item.name"
-                />
+                    v-for="item in databaseList" :key="item.name"
+                    :label="item.name" :value="item.name"/>
             </el-select>
             <el-input v-model="filterText" @change="filterNode"></el-input>
             <el-scrollbar id="tree">
@@ -233,38 +233,49 @@ const deleteSql = () => {
             <div class="operateRow">
                 <el-link :icon="VideoPlay" @click="runSql" size="small" :underline="false">运行</el-link>
                 <el-link :icon="Grid" @click="explainSql" size="small" :underline="false">解释</el-link>
+                <el-link :icon="Switch" @click="showSubTable=!showSubTable" size="small" :underline="false">
+                    {{ showSubTable ? '隐藏' : '显示' }}结果
+                </el-link>
             </div>
-            <my-editor ref="editor"></my-editor>
-            <div class="subTable" v-show="showSubTable">
-                <div style="padding: 0.5em">
-                    <el-icon class="hideTable">
-                        <ArrowDown/>
-                    </el-icon>
-                    <el-table :data="tableData" border class="table" ref="table" :fit="true"
-                              :highlight-current-row="true" :height="ht"
-                              :scrollbar-always-on="true">
-                        <el-table-column v-for="item in tableColumn" :key="item.Field" :prop="item.Field"
-                                         :label="item.Field"
-                                         :width="flexWidth(item.Field)" :show-overflow-tooltip="true">
-                            <template #header>
-                                {{ item.Field }}
-                            </template>
-                            <template #default="scope">
-                                <div class="iptDiv">{{ scope.row[item.Field] }}</div>
-                            </template>
-                        </el-table-column>
-                    </el-table>
-                    <el-pagination
-                        background
-                        class="pagination"
-                        :total="parseInt(count)"
-                        v-model:page-size="pageSize"
-                        v-model:current-page="currentPage"
-                        :page-sizes="[10, 30, 50, 100]"
-                        @size-change="handleSizeChange"
-                        @current-change="handleCurrentChange"
-                        layout="total, sizes, prev, pager, next, jumper"
-                    />
+            <div class="flexColumn flex1">
+                <my-editor ref="editor"></my-editor>
+                <div class="subTable" :style="{minHeight:showSubTable?'200px':'unset'}">
+                    <div>
+                        <div class="hideTable" @click="showSubTable=!showSubTable">
+                            <el-icon>
+                                <ArrowDown v-if="showSubTable"/>
+                                <ArrowUp v-else/>
+                            </el-icon>
+                        </div>
+                        
+                        <el-table :data="tableData" border class="table" ref="table"
+                                  :highlight-current-row="true" :height="ht" v-show="showSubTable"
+                                  :scrollbar-always-on="true">
+                            <el-table-column v-for="item in tableColumn" :key="item.Field" :prop="item.Field"
+                                             :label="item.Field"
+                                             :width="flexWidth(item.Field)" :show-overflow-tooltip="true">
+                                <template #header>
+                                    {{ item.Field }}
+                                </template>
+                                <template #default="scope">
+                                    <div class="iptDiv">{{ scope.row[item.Field] }}</div>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                        <el-pagination
+                            v-show="showSubTable"
+                            background
+                            small
+                            class="pagination"
+                            :total="parseInt(count)"
+                            v-model:page-size="pageSize"
+                            v-model:current-page="currentPage"
+                            :page-sizes="[10, 30, 50, 100]"
+                            @size-change="handleSizeChange"
+                            @current-change="handleCurrentChange"
+                            layout="total, sizes, prev, pager, next, jumper"
+                        />
+                    </div>
                 </div>
             </div>
         </div>
@@ -308,13 +319,8 @@ const deleteSql = () => {
 }
 
 .subTable {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    width: 100%;
+    border-left: 1px solid #E4E7ED;
     background: white;
-    
-    min-height: 200px;
 }
 
 #tree {
@@ -322,16 +328,15 @@ const deleteSql = () => {
     width: 200px;
 }
 
-.subTable > div {
-    padding: 0.5em;
-}
 
 .leftOperate {
     width: 200px;
     border-right: 1px solid #ccc;
+    border-left: 1px solid #E4E7ED;
     background: white;
     padding: 5px;
     height: calc(100% - 10px);
+    gap: 2px
 }
 
 #sqlMenu {
@@ -364,6 +369,33 @@ const deleteSql = () => {
     }
 }
 
+.hideTable {
+    text-align: center;
+    cursor: pointer;
+    border-top: 1px solid #ebeef5;
+    border-left: 1px solid #ebeef5;
+    border-right: 1px solid #ebeef5;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    height: 21px;
+    line-height: 21px;
+}
 
+.hideTable:hover {
+    background: #EEEEEE;
+}
+
+:deep(.el-table .cell) {
+    padding: 4px 8px;
+}
+
+:deep(.el-pagination) {
+    padding: 3px 5px;
+}
+
+.iptDiv {
+    overflow: hidden;
+    white-space: nowrap;
+}
 </style>
 <style src="@/css/sqlquery.css"></style>

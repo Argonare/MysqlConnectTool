@@ -15,6 +15,9 @@ import uuid
 from functools import wraps
 
 import pymysql
+import sqlparse
+from pymysql import OperationalError
+from pymysql.cursors import DictCursor
 
 from api.apiUtil import *
 from api.apiUtil import convert, create_connect, success
@@ -161,18 +164,35 @@ class API(System, Storage):
         page_size = other["pageSize"]  # 每页显示的记录数
         current_page = other["currentPage"]  # 当前页码
         start_position = (current_page - 1) * page_size
-        count_cmd = "select count(1) as ct from (" + cmd + ") as t"
-        count_data = self.cursor_data(db, count_cmd)[0]["ct"]
+        count_data=None
+        try:
+            #表名不能用count 来算记录数
+            count_cmd = "select count(0) as ct from (" + cmd + ") as t"
+            count_data = self.cursor_data(db, count_cmd)[0]["ct"]
+        except OperationalError as e:
+            cursor:DictCursor = self.get_cursor(db, cmd)
+            count_data=cursor.rowcount
+
         if "limit" not in cmd:
             cmd = cmd + " limit " + str(start_position) + "," + str(page_size)
-
-        cursor = self.get_cursor(db, cmd)
-
         db.commit()
+        cursor = self.get_cursor(db, cmd)
         table_data = cursor.fetchall()
+        table_column = [{"Field": column[0]} for column in cursor.description]
+        print(cursor.description)
+        try:
+            parsed_query = sqlparse.parse(cmd)
+            # 遍历解析出表名
+            table_names = []
+            for stmt in parsed_query:
+                for token in stmt.tokens:
+                    if isinstance(token, sqlparse.sql.Identifier):
+                        table_name = token.get_real_name()
+                        table_names.append(table_name)
+            print(table_names)
+        except Exception as e:
+            print(e)
 
-
-        table_column = [{"Field":column[0]} for column in cursor.description]
         return success({"data": table_data, "column": table_column, "count": count_data})
 
     @connect

@@ -684,7 +684,6 @@ export function createMybatisEditor(selfObj, id, refItem) {
         },
         specialChars: new RegExp("[\'()]", "g"),
         specialCharPlaceholder: function (ch) {
-            console.log(ch)
             let token = document.createElement("span");
             let content = ch + " ";
             token.className = "cm-invalidchar";
