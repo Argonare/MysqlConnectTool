@@ -45,7 +45,11 @@ function calHeight() {
 }
 
 const refreshDatabase = (item) => {
+    let database = connectParam["database"]
     connectParam = item
+    if (!connectParam["database"]) {
+        connectParam["database"] = database
+    }
     proxy.$request("get_database", item).then(data => {
         databaseList.value = data
     })
@@ -189,11 +193,13 @@ const deleteSql = () => {
 //############################ 初始化的 ###############################
 
 if (store.state.lastConnect != null && JSON.stringify(store.state.lastConnect) != '{}') {
+    console.log(111)
     let item = store.state.lastConnect
     connect.value = item.name
     connectParam = item
-    refreshDatabase(item)
     database.value = item.database
+    refreshDatabase(item)
+    
     changeActive(item.database)
     code.value = "select * from " + item.table
 }
