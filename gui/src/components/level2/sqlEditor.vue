@@ -204,6 +204,16 @@ if (store.state.lastConnect != null && JSON.stringify(store.state.lastConnect) !
     code.value = "select * from " + item.table
 }
 
+//############################## 注释 #####################
+const showComment = ref(false)
+const getTableLabel = (obj) => {
+    if (!showComment.value) {
+        console.log(obj["Field"])
+        return obj["Field"];
+    }
+    console.log(obj["Comment"] ? obj["Comment"] : obj["Field"])
+    return obj["Comment"] ? obj["Comment"] : obj["Field"];
+}
 
 </script>
 
@@ -242,6 +252,9 @@ if (store.state.lastConnect != null && JSON.stringify(store.state.lastConnect) !
                 <el-link :icon="Switch" @click="showSubTable=!showSubTable" size="small" :underline="false">
                     {{ showSubTable ? '隐藏' : '显示' }}结果
                 </el-link>
+                <el-link :icon="Switch" @click="showComment = !showComment" size="small" :underline="false">
+                    {{ showComment ? '隐藏' : '显示' }}注释
+                </el-link>
             </div>
             <div class="flexColumn flex1">
                 <my-editor ref="editor"></my-editor>
@@ -258,10 +271,10 @@ if (store.state.lastConnect != null && JSON.stringify(store.state.lastConnect) !
                                   :highlight-current-row="true" :height="ht" v-show="showSubTable"
                                   :scrollbar-always-on="true">
                             <el-table-column v-for="item in tableColumn" :key="item.Field" :prop="item.Field"
-                                             :label="item.Field"
+                                             :label="getTableLabel(item)"
                                              :width="flexWidth(item.Field)" :show-overflow-tooltip="true">
                                 <template #header>
-                                    {{ item.Field }}
+                                    {{ getTableLabel(item) }}
                                 </template>
                                 <template #default="scope">
                                     <div class="iptDiv">{{ scope.row[item.Field] }}</div>

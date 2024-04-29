@@ -164,14 +164,14 @@ class API(System, Storage):
         page_size = other["pageSize"]  # 每页显示的记录数
         current_page = other["currentPage"]  # 当前页码
         start_position = (current_page - 1) * page_size
-        count_data=None
+        count_data = None
         try:
-            #表名不能用count 来算记录数
+            # 表名不能用count 来算记录数
             count_cmd = "select count(0) as ct from (" + cmd + ") as t"
             count_data = self.cursor_data(db, count_cmd)[0]["ct"]
         except OperationalError as e:
-            cursor:DictCursor = self.get_cursor(db, cmd)
-            count_data=cursor.rowcount
+            cursor: DictCursor = self.get_cursor(db, cmd)
+            count_data = cursor.rowcount
 
         if "limit" not in cmd:
             cmd = cmd + " limit " + str(start_position) + "," + str(page_size)
@@ -189,10 +189,19 @@ class API(System, Storage):
                     if isinstance(token, sqlparse.sql.Identifier):
                         table_name = token.get_real_name()
                         table_names.append(table_name)
-            print(table_names)
+            table_names = list(set(table_names))
+
+            for i in table_names:
+                field_map = dict(
+                    map(lambda x: (x["Field"], x["Comment"]), self.cursor_data(db, 'show full columns from ' + i)))
+                for j in table_column:
+                    if "Comment" not in j and j["Field"] in field_map and field_map[j["Field"]] != "":
+                        j["Comment"] = field_map[j["Field"]]
+
+
         except Exception as e:
             print(e)
-
+        print(table_column)
         return success({"data": table_data, "column": table_column, "count": count_data})
 
     @connect
