@@ -16,7 +16,6 @@ onMounted(() => {
 })
 import {useRouter} from "vue-router";
 import {useStore} from "vuex";
-import {CircleClose} from "@element-plus/icons-vue";
 import {Action, ElMessage, ElMessageBox} from "element-plus";
 
 const router = useRouter()
@@ -36,13 +35,10 @@ const getSavedData = async () => {
         if (saved == null) {
             return [];
         }
-        console.log(saved)
         saved.forEach((e) => {
-
             if (tree.value.getNode(e.id) == null) {
                 tree.value!.append(e)
             }
-
         })
         tmpData = saved
         store.state.connectList = saved
@@ -63,9 +59,7 @@ const addData = (treeData: object) => {
     tree.value!.append(treeData)
     tmpData.push(treeData)
     store.state.connectList = tmpData
-    proxy.$request("save_config", tmpData).then(data => {
-
-    })
+    proxy.$request("save_config", tmpData)
 }
 
 
@@ -102,6 +96,7 @@ const handleNodeClick = (data: Tree) => {
                 connect_data.database = data.databases
                 connect_data.table = data.name
                 connect_data.nickName = data.name
+                // connect_data.comment=data.comment
                 delete connect_data.sql
                 router.push({path: "/DataTable", query: connect_data})
             }

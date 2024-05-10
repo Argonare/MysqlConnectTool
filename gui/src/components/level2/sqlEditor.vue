@@ -416,5 +416,8 @@ const getTableLabel = (obj) => {
     overflow: hidden;
     white-space: nowrap;
 }
+.table :deep(.el-table__cell){
+    padding: 0;
+}
 </style>
 <style src="@/css/sqlquery.css"></style>

@@ -1,13 +1,14 @@
 <script lang="ts" setup>
 
 import {nextTick, onMounted, ref, watch} from 'vue'
-onMounted(() => {
 
-	 window.addEventListener('pywebviewready', function() {
+onMounted(() => {
+    
+    window.addEventListener('pywebviewready', function () {
         connectTree.value.refreshData()
     })
-	dragControllerDiv()
-
+    dragControllerDiv()
+    
     if (route.path == "/") {
         return
     }
@@ -20,7 +21,7 @@ onMounted(() => {
     }
     store.commit('add_tabs', {route: route.fullPath, name: route.name, nickName: nickName});
     store.commit('set_active_index', route.fullPath);
-
+    
 });
 import ConnectDialog from "@/components/level2/connectDialog.vue";
 import MenuItem from "@/components/level1/menuItem.vue";
@@ -54,16 +55,21 @@ watch(router.currentRoute, (to) => {
             break;
         }
     }
-
+    console.log(to)
     if (!flag) {
-        let nickName =getTargetUrlParam(to.fullPath,"nickName")
-        if (nickName==null) {
+        let nickName = getTargetUrlParam(to.fullPath, "nickName")
+        if (!nickName) {
             nickName = to.name
         }
-        store.commit('add_tabs', {route: to.fullPath, name: to.name, nickName: nickName});
+        store.commit('add_tabs', {
+            route: to.fullPath,
+            name: to.name,
+            nickName: nickName,
+            classItem: to.path.substring(1) + "_" + nickName,
+            comment: to.query.comment
+        });
         store.commit('set_active_index', to.fullPath);
     }
-
 });
 const dragControllerDiv = () => {
     let left = document.getElementById('left-tree')
@@ -96,14 +102,7 @@ const addConnect = () => {
     connectDialog.value.show()
 }
 const openEditor = () => {
-	let param = ""
-	// for (let i = store.state.openTab.length - 1; i <= 0; i--) {
-	// 	if (store.state.openTab[i].length>0 && store.state.openTab[i].indexOf("tableData") > 0) {
-	// 		param = store.state.openTab[i].split("?")[1]
-	// 		break
-	// 	}
-	// }
-	router.push({path: "/sqlEditor"})
+    router.push({path: "/sqlEditor"})
 }
 </script>
 
@@ -149,9 +148,11 @@ const openEditor = () => {
     flex-shrink: 0;
     height: 100%;
 }
-.flex1{
-	flex: 1;
+
+.flex1 {
+    flex: 1;
 }
+
 .resize {
     cursor: col-resize;
     position: absolute;
@@ -232,8 +233,6 @@ footer {
 .flex {
     display: flex;
 }
-
-
 
 
 .scroll {

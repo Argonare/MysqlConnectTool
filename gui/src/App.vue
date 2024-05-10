@@ -17,6 +17,10 @@ import Index from "./view/index.vue";
 <style>
 *{
     font-family: PingFang SC;
+    font-weight: 400;
+}
+:deep(.el-table) thead th{
+    font-weight: 400;
 }
 .flexItem {
 	display: flex;
@@ -45,6 +49,9 @@ import Index from "./view/index.vue";
 }
 .height100{
     height: 100%;
+}
+.textCenter{
+    text-align: center;
 }
 .width100{
     width: 100%;

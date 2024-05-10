@@ -12,10 +12,7 @@ export default createStore({
     mutations: {
         // 添加tabs
         add_tabs(state, data) {
-            // if (state.openTab.length > 10) {
-            //     return
-            // }
-            console.log("add")
+            console.log(data)
             let flag = 0
             state.openTab.forEach(e => {
                 if (e['route'] === data.route) {
@@ -25,8 +22,6 @@ export default createStore({
             if (flag === 0) {
                 state.openTab.push(data);
             }
-            console.log(data)
-
         },
         // 删除tabs
         delete_tabs(state, route) {
@@ -51,7 +46,6 @@ export default createStore({
         },
         // 设置当前激活的tab
         set_active_index(state, index) {
-            console.log("active")
             if (state.openTab.length > 10) {
                 return
             }
