@@ -48,14 +48,29 @@ def convert(class_name: type, data):
     return data, other
 
 
+def get_cursor(db, cmd):
+    cursor = db.cursor()
+    cursor.execute(cmd)
+    return cursor
+
+
 def create_connect(connect: Connect):
+    db = None
+
     try:
-        db = pymysql.connect(host=connect.ip, user=connect.username, password=connect.password, port=int(connect.port),
-                             database=connect.database, cursorclass=pymysql.cursors.DictCursor, conv=conv,
-                             )
+        if connect.database is not None:
+            db = pymysql.connect(host=connect.ip, user=connect.username, password=connect.password,
+                                 port=int(connect.port),
+                                 database=connect.database, cursorclass=pymysql.cursors.DictCursor, conv=conv)
+        else:
+            db = pymysql.connect(host=connect.ip, user=connect.username, password=connect.password,
+                                 port=int(connect.port), cursorclass=pymysql.cursors.DictCursor, conv=conv, )
         return db
     except Exception as err:
         raise Exception(err)
+
+def check_empty(data:str):
+    return data is None or data.strip() == ""
 
 
 def convert_type(data, tm):

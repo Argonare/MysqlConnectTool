@@ -27,6 +27,7 @@ let tmpData = []
 
 const getSavedData = async () => {
     proxy.$request("get_config", {}).then(data => {
+        console.log(data)
         data.forEach(e => {
             e = <Tree>e
             e.showName = e.name
@@ -44,12 +45,12 @@ const getSavedData = async () => {
         store.state.connectList = saved
         return saved
     })
-
+    
 }
 
 
 const refreshData = async () => {
-
+    
     return <Tree []>getSavedData()
 }
 
@@ -66,10 +67,6 @@ const addData = (treeData: object) => {
 interface Tree {
     id: number
     name: string
-    ip: string
-    username: string
-    password: string
-    port: number
     level: number
     database: string
     children?: database[]
@@ -112,14 +109,17 @@ let defaultProps: TreeOptionProps = {
     isLeaf: 'leaf',
 }
 
-const loadNode = (node: Node, resolve: (data: Tree[]) => void) => {
+const loadNode = (node: Node, resolve: (data: Tree[]) => void, reject) => {
     if (node.level === 1) {
+        console.log(node.data)
         proxy.$request("get_database", toRaw(node.data)).then(data => {
             data.forEach(e => {
                 e = <Tree>e
                 e.showName = e.name
             })
             return resolve(data)
+        }).catch(() => {
+            return reject()
         })
     } else if (node.level === 2) {
         let d = JSON.parse(JSON.stringify(toRaw(node.parent.data)))
@@ -134,21 +134,23 @@ const loadNode = (node: Node, resolve: (data: Tree[]) => void) => {
                 }
             })
             return resolve(data)
+        }).catch(() => {
+            return reject()
         })
     } else {
         resolve(data)
     }
-
+    
 }
 //############################### 右键菜单 ####################
 let currentData = null;
 const showMenuPosition = (event, data, node: Node) => {
     currentData = node
     showMenu.value = data.level
-
+    
     let menu = document.querySelector("#menu");
     let item = menu.parentElement
-
+    
     menu["style"].left = event.clientX - item.offsetLeft + "px";
     menu["style"].top = event.clientY - item.offsetTop + "px";
     // 改变自定义菜单的隐藏与显示
@@ -183,7 +185,7 @@ const deleteTable = () => {
         connect_data.table = currentData.data.name
         connect_data.nickName = data.name
         delete connect_data.sql
-
+        
         proxy.$request("drop_table", connect_data).then(data => {
             currentData.parent.loaded = false
             currentData.parent.expand()
@@ -230,7 +232,7 @@ const viewSql = () => {
     connect_data.database = data.Database
     connect_data.table = currentData.data.name
     connect_data.nickName = data.name
-
+    
     proxy.$request("show_table_sql", connect_data).then(data => {
         ElMessageBox.alert(data, connect_data.table, {
             confirmButtonText: '复制sql',
@@ -251,7 +253,7 @@ const handleEnterKey = (event) => {
         filterText.value = filterText.value + event.key
         searchInput.value.focus()
     }
-
+    
 }
 defineExpose({
     addData,
@@ -275,7 +277,7 @@ const searchInput = ref()
                  empty-text=""/>
     </el-scrollbar>
     <el-input ref="searchInput" v-model="filterText" placeholder="" :clearable="true" v-show="filterText.length>0"/>
-
+    
     <div v-show="showMenu!=0" id="menu" class="menuDiv">
         <div class="menuUl" v-if="showMenu==3">
             <p @click="addTable">新建表</p>
@@ -303,7 +305,7 @@ const searchInput = ref()
 .bottomSearch :deep(.el-input__wrapper) {
     box-shadow: 0 0 0 0px var(--el-input-border-color, var(--el-border-color)) inset;
     cursor: default;
-
+    
     .el-input__inner {
         cursor: default !important;
     }
@@ -317,19 +319,19 @@ const searchInput = ref()
 
 #menu {
     position: absolute;
-
+    
     .menuUl > p {
         margin: 0;
         cursor: pointer;
         border-bottom: 1px solid rgba(255, 255, 255, 0.47);
         padding: 5px 1.5em;
         font-size: 12px;
-
+        
         &:hover {
             background-color: #eee;
         }
     }
-
+    
     .menuUl {
         min-width: 70px;
         height: auto;
@@ -341,7 +343,7 @@ const searchInput = ref()
         list-style: none;
         border: 1px solid #ccc;
         padding: 0;
-
+        
     }
 }
 

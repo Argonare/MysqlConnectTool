@@ -152,7 +152,7 @@ let currentData = null;
 const showMenuPosition = (event, data, node: Node) => {
     currentData = node
     showMenu.value = data.level
-    let menu = document.querySelector("#sqlMenu");
+    let menu = document.querySelector(".sqlEditor_sql编辑器 #sqlMenu");
     let item = document.querySelector("#right-content");
     
     

@@ -16,7 +16,7 @@ from functools import wraps
 
 import pymysql
 import sqlparse
-from pymysql import OperationalError
+from pymysql import OperationalError, Connection
 from pymysql.cursors import DictCursor
 
 from api.apiUtil import *
@@ -27,6 +27,17 @@ from api.system import System
 from api.model.connect import Connect
 
 
+def close_connect(f):
+    def over(*args, **kwargs):
+        ret = f(*args, **kwargs)
+        for i in args:
+            if type(i) is Connection:
+                i.close()
+        return ret
+
+    return over
+
+
 class API(System, Storage):
     '''业务层API，供前端JS调用'''
 
@@ -34,11 +45,19 @@ class API(System, Storage):
         @wraps(func)
         def decorate(self, data):
             connect, other = convert(Connect, data)
-
-            if connect.name not in self.db_connect:
-                db = create_connect(connect)
+            connect_name = connect.name
+            if not check_empty(connect.database):
+                connect_name = connect.name + ":" + connect.database
+            final_connect = connect
+            if connect_name not in self.db_connect:
+                if connect.name in self.db_connect:
+                    final_connect: Connect = self.db_connect[connect.name]
+                    final_connect.database = connect.database
+                self.db_connect[connect_name] = final_connect
             else:
-                db = self.db_connect[connect.name]
+                final_connect = self.db_connect[connect_name]
+            final_connect.table = connect.table
+            db = create_connect(final_connect)
             return func(self, connect, db, other)
 
         return decorate
@@ -50,11 +69,6 @@ class API(System, Storage):
         data: list = cursor.fetchall()
         return data
 
-    def get_cursor(self, db, cmd):
-        cursor = db.cursor()
-        cursor.execute(cmd)
-        return cursor
-
     def __init__(self):
         self.db_connect = {}
 
@@ -62,7 +76,7 @@ class API(System, Storage):
         '''获取窗口实例'''
         System.window = window
 
-    def get_config(self, data):
+    def get_config(self, emptyData):
         saved = []
         path = os.environ['USERPROFILE'] + "/database/data.json"
         if not os.path.exists(path):
@@ -77,7 +91,13 @@ class API(System, Storage):
                     saved = []
                 else:
                     saved = json.loads(data)
-        return success(saved)
+        result = []
+        for i in saved:
+            connect = Connect()
+            connect.__dict__ = i
+            self.db_connect[connect.name] = connect
+            result.append({"id": i["id"], "name": i["name"]})
+        return success(result)
 
     def save_config(self, data):
         data[-1]["id"] = str(uuid.uuid4())
@@ -93,6 +113,7 @@ class API(System, Storage):
         return success()
 
     @connect
+    @close_connect
     def get_database(self, data: Connect, db, other):
         cmd = "show databases"
         database: list = self.cursor_data(db, cmd)
@@ -170,13 +191,13 @@ class API(System, Storage):
             count_cmd = "select count(0) as ct from (" + cmd + ") as t"
             count_data = self.cursor_data(db, count_cmd)[0]["ct"]
         except OperationalError as e:
-            cursor: DictCursor = self.get_cursor(db, cmd)
+            cursor: DictCursor = get_cursor(db, cmd)
             count_data = cursor.rowcount
 
         if "limit" not in cmd:
             cmd = cmd + " limit " + str(start_position) + "," + str(page_size)
         db.commit()
-        cursor = self.get_cursor(db, cmd)
+        cursor = get_cursor(db, cmd)
         table_data = cursor.fetchall()
         table_column = [{"Field": column[0]} for column in cursor.description]
         print(cursor.description)
