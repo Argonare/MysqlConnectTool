@@ -1,6 +1,7 @@
 import json
 
 import pymysql
+from pymysql.constants import CLIENT
 
 from api.model.connect import Connect
 
@@ -61,15 +62,18 @@ def create_connect(connect: Connect):
         if connect.database is not None:
             db = pymysql.connect(host=connect.ip, user=connect.username, password=connect.password,
                                  port=int(connect.port),
-                                 database=connect.database, cursorclass=pymysql.cursors.DictCursor, conv=conv)
+                                 database=connect.database, cursorclass=pymysql.cursors.DictCursor, conv=conv,
+                                 client_flag=CLIENT.MULTI_STATEMENTS)
         else:
             db = pymysql.connect(host=connect.ip, user=connect.username, password=connect.password,
-                                 port=int(connect.port), cursorclass=pymysql.cursors.DictCursor, conv=conv, )
+                                 port=int(connect.port), cursorclass=pymysql.cursors.DictCursor, conv=conv,
+                                 client_flag=CLIENT.MULTI_STATEMENTS)
         return db
     except Exception as err:
         raise Exception(err)
 
-def check_empty(data:str):
+
+def check_empty(data: str):
     return data is None or data.strip() == ""
 
 

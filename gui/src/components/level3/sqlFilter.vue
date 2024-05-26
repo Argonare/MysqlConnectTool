@@ -1,12 +1,13 @@
 <script setup>
 import {computed, ref, toRefs, watch} from "vue";
 import ListSearch from "@/components/level3/listSearch.vue";
-
+import {useRoute} from "vue-router";
 
 const props = defineProps({
 	headerType: String,
 	tableColumn: Array
 })
+
 const {headerType, tableColumn} = toRefs(props)
 watch(headerType, (newVal, oldValue) => {
 	searchParam.value.forEach(e => {
@@ -14,7 +15,7 @@ watch(headerType, (newVal, oldValue) => {
 	})
 })
 const emit = defineEmits(['getRes', "cancel"])
-
+const route = useRoute();
 const showFilter = ref(0)
 const searchParam = ref([])
 let listItemIndex = null
@@ -84,7 +85,8 @@ const searchList = computed(() => {
 
 const showSearchPanel = (event, value, mode = 3, index, name) => {
 	activeIndex.value = index
-	let menu = document.querySelector("#searchList");
+	let menu = document.querySelector(`.DataTable_${route.query.table} #searchList`);
+
 	let item = menu.parentElement.parentElement.parentElement.parentElement.parentElement
 
 	listItemIndex = index
@@ -277,6 +279,7 @@ defineExpose({switchFilter, addParam})
 
 #searchList {
 	position: absolute;
+	z-index: 99;
 }
 
 </style>
