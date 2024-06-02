@@ -31,7 +31,7 @@
 
 ### 功能列表（Function List）
 
-- [ ] 增删改查的基础功能（Basic functions of add, delete ,edit and select）
+- [x] 增删改查的基础功能（Basic functions of add, delete ,edit and select）
 - [x] 注释字段切换（switch comment and field）
 - [x] 隐藏某列字段（hide someone field）
 - [ ] 筛选字段方案（Filter Field Scheme）

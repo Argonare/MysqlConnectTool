@@ -394,7 +394,13 @@ const addLine = () => {
 		<el-table-column v-for="(item,index) in columnFilter" :key="index" :prop="item.prop" :label="item.label"
 		                 :width="flexWidth(item.label)" :min-width="0" :show-overflow-tooltip="true">
 			<template #header>
-				{{ headerType == 'en' ? item.label : item.comment }}
+				<div class="flexRow">
+					<div class="flex1"> {{ headerType == 'en' ? item.label : item.comment }}</div>
+					<el-icon class="alignCenter filterBtn">
+						<Filter class="rightItem "/>
+					</el-icon>
+				</div>
+
 			</template>
 			<template #default="scope">
 				<input v-if="editX==scope.$index&& editY==scope.column.no"
@@ -440,7 +446,9 @@ const addLine = () => {
 
 <style scoped>
 
-
+.filterBtn{
+	cursor: pointer;
+}
 .topButton {
 	background: white;
 	width: 100%;
@@ -573,6 +581,7 @@ const addLine = () => {
 
 :deep(.el-table__cell) {
 	height: 20px;
+	padding: 4px 0 !important;
 }
 
 :deep(.el-table__body) {

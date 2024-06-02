@@ -6,7 +6,7 @@ onMounted(() => {
 	getData()
 })
 
-import {emptyDefault,sqlFieldType} from "@/js/common";
+import {emptyDefault, sqlFieldType} from "@/js/common";
 import {useRoute} from "vue-router";
 import {ElMessage, ElMessageBox} from "element-plus";
 
@@ -192,7 +192,23 @@ const rules = {
 		{required: true, message: '请输入备注', trigger: 'change'},
 	]
 }
-
+const handleClick = (command) => {
+	let field={}
+	if(command==='userInt'){
+		field={field:"createBy",type:"int",len:11,default: "NULL",isNull:true,primary:false,comment:"创建人"}
+	}else if(command==='userChar'){
+		field={field:"createBy",type:"varchar",len:100,default: "NULL",isNull:true,primary:false,comment:"创建人"}
+	}else if(command==='createTimeChar'){
+		field={field:"createTime",type:"varchar",len:32,default: "NULL",isNull:true,primary:false,comment:"创建时间"}
+	}else if(command==='createTime'){
+		field={field:"createTime",type:"datetime",len:null,default: "NULL",isNull:true,primary:false,comment:"创建时间"}
+	}else if(command==='userCreateTime'){
+		field={field:"createBy",type:"int",len:11,default: "NULL",isNull:true,primary:false,comment:"创建人"}
+		ruleForm.value.tableData.push(field)
+		field={field:"createTime",type:"varchar",len:32,default: "NULL",isNull:true,primary:false,comment:"创建时间"}
+	}
+	ruleForm.value.tableData.push(field)
+}
 </script>
 
 <template>
@@ -222,6 +238,24 @@ const rules = {
 					<CircleClose/>
 				</el-icon>
 				<div class="barFont">删除字段</div>
+			</div>
+			<div class="flexRow primaryBtn rightItem">
+				<el-dropdown  @command="handleClick">
+				    <div class="flexRow">
+					    <el-icon><ArrowDown /></el-icon>
+						<div class="barFont">预设字段</div>
+				    </div>
+					<template #dropdown>
+						<el-dropdown-menu>
+							<el-dropdown-item command="userInt">创建人（int）</el-dropdown-item>
+							<el-dropdown-item command="userChar">创建人（varchar）</el-dropdown-item>
+							<el-dropdown-item command="createTimeChar">创建时间（varchar）</el-dropdown-item>
+							<el-dropdown-item command="createTime">创建时间（datetime）</el-dropdown-item>
+							<el-dropdown-item command="userCreateTime">创建时间（varchar）+创建人（int）</el-dropdown-item>
+						</el-dropdown-menu>
+					</template>
+				</el-dropdown>
+
 			</div>
 		</div>
 		<el-form :model="ruleForm" ref="formRef">
@@ -368,7 +402,8 @@ const rules = {
 	border-radius: 5px;
 	border: 1px solid red;
 }
-:deep(.cell):has(.el-select), :deep(.cell):has(.el-input){
+
+:deep(.cell):has(.el-select), :deep(.cell):has(.el-input) {
 	padding: 0 5px;
 }
 
@@ -392,7 +427,9 @@ const rules = {
 		color: white;
 		box-shadow: 0 2px 12px 0 rgba(0, 0, 0, .1);
 	}
-
+	& .primaryBtn:hover .barFont,& .primaryBtn:hover .el-icon{
+		color: white;
+	}
 	& .dangerBtn:hover {
 		background: #F56C6C;
 		color: white;

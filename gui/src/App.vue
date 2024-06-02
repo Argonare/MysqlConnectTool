@@ -56,4 +56,10 @@ import Index from "./view/index.vue";
 .width100{
     width: 100%;
 }
+.alignCenter{
+	align-self: center;
+}
+.rightItem{
+	margin-left: auto;
+}
 </style>

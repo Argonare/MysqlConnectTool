@@ -12,6 +12,7 @@ import json
 import os
 import time
 import uuid
+from copy import deepcopy
 from functools import wraps
 
 import pymysql
@@ -51,7 +52,7 @@ class API(System, Storage):
             final_connect = connect
             if connect_name not in self.db_connect:
                 if connect.name in self.db_connect:
-                    final_connect: Connect = self.db_connect[connect.name]
+                    final_connect: Connect = deepcopy(self.db_connect[connect.name])
                     final_connect.database = connect.database
                 self.db_connect[connect_name] = final_connect
             else:
@@ -177,7 +178,7 @@ class API(System, Storage):
 
         for i in other["insertData"]:
             del i["@add"]
-            field = ",".join(['`'+x+'`' for x in i.keys()])
+            field = ",".join(['`' + x + '`' for x in i.keys()])
             cmd += "insert into " + data.table + " (" + field + ") values( " + ','.join(
                 [str(x) for x in i.values()]) + ');'
         self.cursor_data(db, cmd)
