@@ -29,11 +29,12 @@ const tabRemove = (targetName) => {
     // if (targetName == '/' || targetName == "/empty") {
     //     return
     // }
-    store.commit('delete_tabs', targetName);
+    
+    console.log(targetName)
     if (store.state.activeIndex === targetName) {
         // 设置当前激活的路由
-        if (store.state.openTab && store.state.openTab.length >= 1) {
-            let path = store.state.openTab[store.state.openTab.length - 1].route
+        if (store.state.openTab && store.state.openTab.length >= 2) {
+            let path = store.state.openTab[store.state.openTab.length - 2].route
             store.commit('set_active_index', path);
             let param = getPramData(path)
             router.push({path: store.state.activeIndex, query: param});
@@ -41,6 +42,7 @@ const tabRemove = (targetName) => {
             router.push({path: '/'});
         }
     }
+    store.commit('delete_tabs', targetName);
 }
 const getData = () => {
     panel.value.getData()

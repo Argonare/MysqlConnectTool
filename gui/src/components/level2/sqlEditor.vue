@@ -2,13 +2,15 @@
 
 import {getCurrentInstance, nextTick, onMounted, reactive, ref, toRaw, watch} from "vue";
 import {useStore} from "vuex";
-import {ArrowUp, Grid, Switch, VideoPlay} from "@element-plus/icons-vue";
+import {ArrowUp, Grid, IceCream, Switch, VideoPlay} from "@element-plus/icons-vue";
 import MyEditor from "@/components/level3/myEditor.vue";
 import 'codemirror/theme/solarized.css'
 import 'codemirror/theme/monokai.css'
 import 'codemirror/addon/search/match-highlighter'
 import {TreeOptionProps} from "element-plus/es/components/tree/src/tree.type";
 import {sqlFieldType, sqlFieldMap} from "@/js/common";
+import {Action, ElMessage, ElMessageBox} from "element-plus";
+import useClipboard from "vue-clipboard3";
 
 const {proxy}: any = getCurrentInstance();
 const store = useStore()
@@ -193,7 +195,6 @@ const deleteSql = () => {
 //############################ 初始化的 ###############################
 
 if (store.state.lastConnect != null && JSON.stringify(store.state.lastConnect) != '{}') {
-    console.log(111)
     let item = store.state.lastConnect
     connect.value = item.name
     connectParam = item
@@ -214,7 +215,12 @@ const getTableLabel = (obj) => {
     console.log(obj["Comment"] ? obj["Comment"] : obj["Field"])
     return obj["Comment"] ? obj["Comment"] : obj["Field"];
 }
-
+const {toClipboard} = useClipboard()
+const toJson = () => {
+    
+    toClipboard(JSON.stringify(tableData.value))
+    ElMessage.success("操作成功")
+}
 </script>
 
 <template>
@@ -255,8 +261,11 @@ const getTableLabel = (obj) => {
                 <el-link :icon="Switch" @click="showComment = !showComment" size="small" :underline="false">
                     {{ showComment ? '隐藏' : '显示' }}注释
                 </el-link>
+                <el-link :icon="IceCream" @click="toJson()" size="small" :underline="false">
+                    复制结果JSON
+                </el-link>
             </div>
-            <div class="flexColumn flex1">
+            <div class="flexColumn flex1 height100">
                 <my-editor ref="editor"></my-editor>
                 <div class="subTable" :style="{minHeight:showSubTable?'200px':'unset'}">
                     <div>
@@ -316,6 +325,12 @@ const getTableLabel = (obj) => {
 
 .widthMax {
     width: calc(100% - 200px);
+}
+
+:deep(.el-message-box__message>p) {
+    width: 300px;
+    height: 300px;
+    overflow: hidden;
 }
 
 .operateRow {
@@ -416,7 +431,8 @@ const getTableLabel = (obj) => {
     overflow: hidden;
     white-space: nowrap;
 }
-.table :deep(.el-table__cell){
+
+.table :deep(.el-table__cell) {
     padding: 0;
 }
 </style>

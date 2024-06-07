@@ -113,5 +113,7 @@ defineExpose({
 </template>
 
 <style scoped>
+.CodeMirror{
 
+}
 </style>
