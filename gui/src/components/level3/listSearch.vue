@@ -1,6 +1,6 @@
 <template>
 	<div class="market-details-container">
-		<el-input v-model="keyword" clearable v-if="mode===1||mode===3"/>
+		<el-input v-model="keyword" clearable v-if="mode===1||mode===3" size="small"/>
 		<div class="flexColumn" v-if="mode>1">
 			<div v-for="(v, k) in filterList" :key="k" class="listItem" @click="activeItem(v)"
 			     :class="activeName.value===v.value?'listItemActive':''">
@@ -8,8 +8,8 @@
 			</div>
 		</div>
 		<div class="flexItem bottomButton">
-			<el-button type="primary" @click="confirmMsg">确定</el-button>
-			<el-button @click="cancel">取消</el-button>
+			<el-button type="primary" @click="confirmMsg" size="small">确定</el-button>
+			<el-button @click="cancel" size="small">取消</el-button>
 		</div>
 	</div>
 </template>
@@ -60,7 +60,7 @@ defineExpose({setDefaultValue})
 
 <style scoped lang="scss">
 .bottomButton {
-	margin-top: 1em;
+	margin-top: 0.6em;
 }
 
 .flexItem {
@@ -72,7 +72,7 @@ defineExpose({setDefaultValue})
 }
 
 .market-details-container {
-	padding: 1em;
+	padding: 0.8em;
 	width: 15em;
 	background: white;
 	border: 1px solid #eee;
@@ -82,7 +82,7 @@ defineExpose({setDefaultValue})
 .listItem {
 	margin: 0.3em 0 0;
 	padding: 0.2em 0.5em;
-
+    border-radius: 3px;
 	&:hover {
 		background: #eee;
 	}
