@@ -102,7 +102,6 @@ const showSearchPanel = (event, value, mode = 3, index, name) => {
 	showSearch.value = 1
 }
 const getSearchData = (data) => {
-	console.log(data)
 	showSearch.value = 0
 	if (typeof data == "string") {
 		searchParam.value[listItemIndex][listItemName] = data
@@ -123,7 +122,6 @@ const getSearchData = (data) => {
 		}
 	}
 
-	console.log(searchParam.value)
 }
 
 

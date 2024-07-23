@@ -151,9 +151,9 @@ class API(System, Storage):
         table_data = self.cursor_data(db, cmd)
         for i in table_data:
             i["@uuid"] = str(uuid.uuid4())
-        cmd = "select count(1) as ct from " + data.table
-        ct = self.cursor_data(db, cmd)[0]["ct"]
-        return success({"list": table_data, "count": ct})
+        count_cmd = "select count(1) as ct from " + data.table
+        ct = self.cursor_data(db, count_cmd)[0]["ct"]
+        return success({"list": table_data, "count": ct,"cmd":cmd})
 
     @connect
     def desc_table(self, data: Connect, db, other):
