@@ -77,21 +77,31 @@ class API(System, Storage):
         '''获取窗口实例'''
         System.window = window
 
+    change_log_path = os.environ['USERPROFILE'] + "/database/changeLog.json"
+    config_path = os.environ['USERPROFILE'] + "/database/data.json"
+
+    def save_change_log(self, data: Connect, sql: list):
+        change_log = {}
+        get_file(self.change_log_path, "{}", change_log)
+        for i in sql:
+            if data.name + "." + data.database in change_log:
+                change_list: list = change_log[data.name + "." + data.database]
+                change_list.append({"sql": i, "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())})
+            else:
+                change_log[data.name + "." + data.database] = [
+                    {"sql": i, "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}]
+        with open(self.change_log_path, "w") as f:
+            f.write(json.dumps(change_log))
+
+    @connect
+    def get_change_log(self, data: Connect, db, other):
+        change_log = {}
+        get_file(self.change_log_path, "{}", change_log)
+        return change_log
+
     def get_config(self, emptyData):
         saved = []
-        path = os.environ['USERPROFILE'] + "/database/data.json"
-        if not os.path.exists(path):
-            os.mkdir(os.environ['USERPROFILE'] + "/database")
-            with open(path, 'w', encoding="utf-8") as f:
-                f.write("[]")
-            os.chmod(path, 755)
-        else:
-            with open(path, 'r', encoding="utf-8") as f:
-                data = f.read()
-                if data == "":
-                    saved = []
-                else:
-                    saved = json.loads(data)
+        get_file(self.config_path, "[]", saved)
         result = []
         for i in saved:
             connect = Connect()
@@ -102,8 +112,7 @@ class API(System, Storage):
 
     def save_config(self, data):
         data[-1]["id"] = str(uuid.uuid4())
-        path = os.environ['USERPROFILE'] + "/database/data.json"
-        with open(path, 'w', encoding="utf-8") as f:
+        with open(self.config_path, 'w', encoding="utf-8") as f:
             f.write(json.dumps(data))
         return success()
 
@@ -153,7 +162,7 @@ class API(System, Storage):
             i["@uuid"] = str(uuid.uuid4())
         count_cmd = "select count(1) as ct from " + data.table
         ct = self.cursor_data(db, count_cmd)[0]["ct"]
-        return success({"list": table_data, "count": ct,"cmd":cmd})
+        return success({"list": table_data, "count": ct, "cmd": cmd})
 
     @connect
     def desc_table(self, data: Connect, db, other):
@@ -270,6 +279,7 @@ class API(System, Storage):
                 alert_lis.append(content)
         if len(alert_lis) > 0:
             self.cursor_data(db, cmd + ",".join(alert_lis) + ";")
+        self.save_change_log(data, alert_lis)
         print(cmd + ",".join(alert_lis))
         return success()
 

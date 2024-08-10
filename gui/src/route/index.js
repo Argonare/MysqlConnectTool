@@ -25,6 +25,10 @@ const routes = [
         path: "/tableEdit",
         name: "表编辑",
         component: () => import(/* webpackChunkName: "about" */ "../components/level2/tableEdit.vue"),
+    }, {
+        path: "/changeLog",
+        name: "表变更记录",
+        component: () => import(/* webpackChunkName: "about" */ "../components/level2/changeLog.vue"),
     }
 ];
 

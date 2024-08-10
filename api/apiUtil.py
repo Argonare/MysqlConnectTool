@@ -8,6 +8,7 @@ from api.model.connect import Connect
 from pymysql import converters, FIELD_TYPE
 
 from api.model.dbField import DbField
+import os
 
 conv = converters.conversions
 
@@ -111,3 +112,17 @@ def check_null(field: DbField):
     if field.type == 'decimal' or field.type == "int":
         return str(field.default)
     return "'" + str(field.default) + "'"
+
+
+def get_file(path: str, default_str: str, result_obj):
+    if not os.path.exists(path):
+        os.mkdir(os.environ['USERPROFILE'] + "/database")
+        with open(path, 'w', encoding="utf-8") as f:
+            f.write(default_str)
+        os.chmod(path, 755)
+    else:
+        with open(path, 'r', encoding="utf-8") as f:
+            data = f.read()
+            if data is not None and data != "":
+                return json.loads(data)
+    return result_obj
