@@ -10,6 +10,9 @@ export default createStore({
         lastDatabase: {}
     },
     mutations: {
+        getTabs(state){
+            return state.openTab;
+        },
         // 添加tabs
         add_tabs(state, data) {
             console.log(data)

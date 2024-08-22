@@ -115,8 +115,9 @@ def check_null(field: DbField):
 
 
 def get_file(path: str, default_str: str, result_obj):
-    if not os.path.exists(path):
+    if not os.path.exists(os.environ['USERPROFILE'] + "/database"):
         os.mkdir(os.environ['USERPROFILE'] + "/database")
+    if not os.path.exists(path):
         with open(path, 'w', encoding="utf-8") as f:
             f.write(default_str)
         os.chmod(path, 755)

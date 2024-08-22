@@ -80,28 +80,28 @@ class API(System, Storage):
     change_log_path = os.environ['USERPROFILE'] + "/database/changeLog.json"
     config_path = os.environ['USERPROFILE'] + "/database/data.json"
 
-    def save_change_log(self, data: Connect, sql: list):
+    def save_change_log(self, data: Connect,cmd:str, sql: list):
         change_log = {}
         get_file(self.change_log_path, "{}", change_log)
         for i in sql:
             if data.name + "." + data.database in change_log:
                 change_list: list = change_log[data.name + "." + data.database]
-                change_list.append({"sql": i, "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())})
+                change_list.append({"sql": cmd+' '+i, "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())})
             else:
                 change_log[data.name + "." + data.database] = [
-                    {"sql": i, "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}]
+                    {"sql": cmd+' '+i, "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}]
         with open(self.change_log_path, "w") as f:
             f.write(json.dumps(change_log))
 
     @connect
     def get_change_log(self, data: Connect, db, other):
         change_log = {}
-        get_file(self.change_log_path, "{}", change_log)
-        return change_log
+        change_log=get_file(self.change_log_path, "{}", change_log)
+        return success(change_log)
 
     def get_config(self, emptyData):
         saved = []
-        get_file(self.config_path, "[]", saved)
+        saved = get_file(self.config_path, "[]", saved)
         result = []
         for i in saved:
             connect = Connect()
@@ -262,8 +262,11 @@ class API(System, Storage):
                 continue
             field: DbField = convert_class(attr, DbField)
             if field.add is not None:
-                content = ("add column {0} {1} default ｛2｝ comment '{3}'"
+                content = ("add column {0} {1} default {2} comment '{3}'"
                            .format(field.field, get_length(field), check_null(field), field.comment))
+                alert_lis.append(content)
+            elif field.drop is not None:
+                content = "DROP COLUMN {0}".format(field.field)
                 alert_lis.append(content)
             else:
                 if field.field is not None:
@@ -279,7 +282,7 @@ class API(System, Storage):
                 alert_lis.append(content)
         if len(alert_lis) > 0:
             self.cursor_data(db, cmd + ",".join(alert_lis) + ";")
-        self.save_change_log(data, alert_lis)
+        self.save_change_log(data,cmd, alert_lis)
         print(cmd + ",".join(alert_lis))
         return success()
 

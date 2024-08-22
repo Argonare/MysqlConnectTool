@@ -12,10 +12,17 @@ const getPramData = (path) => {
     if (path.indexOf("?") != -1) {
         let params = path.split("?")[1].split("&")
         params.forEach(e => {
-            param[e.split("=")[0]] = e.split("=")[1]
+            param[e.split("=")[0]] = checkEncode(e.split("=")[1])
         })
     }
     return param
+}
+const checkEncode = (data) => {
+    try {
+        return decodeURIComponent(data);
+    } catch (e) {
+        return data
+    }
 }
 const tabClick = (tab) => {
     console.log("点击了页签")
@@ -86,20 +93,20 @@ defineExpose({
         >
             <template #label>
                 <div class="flexColumn textCenter">
-                    <div>{{item.nickName}}</div>
+                    <div>{{ item.nickName }}</div>
                     <div v-if="item.comment">{{ item.comment }}</div>
                 </div>
-                
+            
             </template>
-         <div class="panel" ref="panel">
-            <router-view v-slot="{Component}">
-                <keep-alive>
-                    <component :is="Component"></component>
-                </keep-alive>
-            </router-view>
-        </div>
+            <div class="panel" ref="panel">
+                <router-view v-slot="{Component}">
+                    <keep-alive>
+                        <component :is="Component"></component>
+                    </keep-alive>
+                </router-view>
+            </div>
         </el-tab-pane>
-       
+    
     </el-tabs>
 </template>
 

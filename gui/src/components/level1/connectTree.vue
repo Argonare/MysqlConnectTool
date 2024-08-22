@@ -248,7 +248,14 @@ const viewSql = () => {
 	})
 }
 const viewChangeLog = () => {
-
+    let data = toRaw(currentData.parent.data)
+	let connect_data = toRaw(currentData.parent.parent.data)
+	store.state.lastConnect = connect_data
+	connect_data.database = data.Database
+	connect_data.table = currentData.data.name
+	connect_data.nickName = currentData.data.name + "@" + data.Database
+	delete connect_data.sql
+    router.push({path: "/changeLog", query: connect_data})
 }
 //################## 搜索框 ################
 const handleEnterKey = (event) => {
