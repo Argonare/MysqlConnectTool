@@ -259,7 +259,6 @@ const viewChangeLog = () => {
 }
 //################## 搜索框 ################
 const handleEnterKey = (event) => {
-	console.log(event.key)
 	if (filterMode.value == true && /^[0-9]*[A-Za-z]+[0-9A-Za-z]*$/.test(event.key) && event.key.length === 1) {
 		filterMode.value = false
 		filterText.value = filterText.value + event.key

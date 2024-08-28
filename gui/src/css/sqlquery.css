@@ -109,3 +109,9 @@ li.CodeMirror-hint-active {
 .CodeMirror {
   font-size: 20px;
 }
+.CodeMirror-linenumbers {
+  min-width: 29px;
+}
+.CodeMirror-sizer{
+    margin-left: 30px !important;
+}

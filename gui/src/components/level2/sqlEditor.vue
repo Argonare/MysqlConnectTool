@@ -25,6 +25,7 @@ onMounted(() => {
     }
 })
 
+
 const databaseList = ref([])
 const connect = ref(null)
 const database = ref(null)
@@ -209,7 +210,6 @@ if (store.state.lastConnect != null && JSON.stringify(store.state.lastConnect) !
 const showComment = ref(false)
 const getTableLabel = (obj) => {
     if (!showComment.value) {
-        console.log(obj["Field"])
         return obj["Field"];
     }
     console.log(obj["Comment"] ? obj["Comment"] : obj["Field"])

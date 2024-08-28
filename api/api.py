@@ -10,6 +10,7 @@ usage: 在Javascript中调用window.pywebview.api.<methodname>(<parameters>)
 '''
 import json
 import os
+import hashlib
 import time
 import uuid
 from copy import deepcopy
@@ -142,7 +143,8 @@ class API(System, Storage):
             i["comment"] = i[list(i.keys())[1]]
             i["leaf"] = True
             i["level"] = 3
-            i["id"] = str(uuid.uuid4())
+            md = hashlib.md5(data.database.encode())
+            i["id"] = md.hexdigest()
             i["databases"] = data.database
         return success(table)
 
@@ -326,3 +328,24 @@ class API(System, Storage):
         cmd = "explain {0} ".format(other["sql"])
         result = self.cursor_data(db, cmd)
         return success(result)
+
+    @connect
+    def get_table_and_field(self, data: Connect, db, other: dict):
+
+        cmd = 'show tables;'
+        table: list = self.cursor_data(db, cmd)
+        md = hashlib.md5(data.database.encode())
+        id = md.hexdigest()
+        table_map={}
+        table_map[id]={}
+        for i in table:
+            table_name=i[list(i.keys())[0]]
+            sub_key=table_name
+            table_map[id][sub_key] = [[], [], []]
+            cmd = 'show full columns from '+table_name+';'
+            table_info=self.cursor_data(db, cmd)
+            for j in table_info:
+                table_map[id][sub_key][0].append(list(j.keys())[0])
+                table_map[id][sub_key][1].append(list(j.keys())[8])
+                table_map[id][sub_key][2].append(list(j.keys())[1])
+        return success(table_map)
