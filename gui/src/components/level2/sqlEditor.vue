@@ -87,18 +87,23 @@ const handleCurrentChange = (val: number) => {
 const filterText = ref()
 const tree = ref()
 const changeActive = (data) => {
-    connectParam["database"] = data
-    proxy.$request("get_table", connectParam).then(data => {
-        treeData.value = data.map(e => {
-            if (e.comment) {
-                e.showName = `${e.comment}(${e.name})`
-            } else {
-                e.showName = e.name
-            }
-            return e
+    nextTick(() => {
+        connectParam["database"] = data
+        editor.value.setConnection(connectParam)
+        editor.value.setDataBases(connectList,connect)
+        proxy.$request("get_table", connectParam).then(data => {
+            treeData.value = data.map(e => {
+                if (e.comment) {
+                    e.showName = `${e.comment}(${e.name})`
+                } else {
+                    e.showName = e.name
+                }
+                return e
+            })
+            
         })
-        
     })
+    
 }
 let treeData = ref()
 let defaultProps: TreeOptionProps = {

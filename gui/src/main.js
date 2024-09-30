@@ -54,7 +54,7 @@ app.config.globalProperties.$request = (func, data) => {
                 ElMessage.error(res.msg)
             }
         }).catch((res) => {
-            ElMessage.error(res.message)
+            ElMessage.error(func + ":" + res.message)
 
         })
     })

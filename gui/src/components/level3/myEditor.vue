@@ -10,13 +10,17 @@ import {
 } from "@/js/mybatis"
 import {sqlqueryHandler, sqlqueryHintHandler, keypressSqlEditor} from "@/js/mybatissql"
 
+const {proxy} = getCurrentInstance();
+const route = useRoute();
 // https://gitee.com/172463468/codemirror5-mybatis-sqlquery
 import {CodeMirror} from 'codemirror-editor-vue3';
 import 'codemirror/addon/hint/show-hint.css'
 import 'codemirror/addon/hint/show-hint.js'
 
-import {onMounted, ref} from "vue";
+import {getCurrentInstance, onMounted, ref} from "vue";
+import {useRoute} from "vue-router";
 
+let connection = ref()
 const codemirror = ref()
 let selfObj = ref({
     existTables: {}, //已查询的表
@@ -29,15 +33,50 @@ let selfObj = ref({
 });
 let editorItem;
 onMounted(() => {
+    
+    if (route.query) {
+        connection.value = route.query
+        initEditor()
+    }
+    
+});
+
+function initEditor() {
+    selfObj.existTables = getAllTables();
+    // exampleDataInit();
     mybatisHandler(CodeMirror)
     mybatisHintHandler(CodeMirror)
     sqlqueryHandler(CodeMirror)
     sqlqueryHintHandler(CodeMirror)
     
     editorItem = createMybatisEditor(selfObj.value, "codemirror", codemirror.value);
-    console.log(222)
     keypressSqlEditor(selfObj.value, getColsOfSchema, getTablesOfSchema);
-});
+}
+
+
+function getAllTables(databaseId) {
+    
+    if (!connection.value.database) {
+        return;
+    }
+    return new Promise((resolve, reject) => {
+        proxy.$request("get_table", connection.value).then(data => {
+            let tableData = {}
+            data.forEach(e => {
+                let key = e.databases
+                if (!tableData[key]) {
+                    tableData[key] = {}
+                }
+                tableData[key][e.name] = e.comment
+            })
+            resolve(tableData)
+            console.log("获取数据库信息>>", tableData);
+            //接口返回处理完成执行回调
+        })
+    })
+    
+    
+}
 
 
 /**
@@ -46,14 +85,14 @@ onMounted(() => {
  */
 function getTablesOfSchema(selfObj, queryVal, callbackHint) {
     //支持跨库 {"public.TBL_DICT":"表1"} 或 不跨库 {"TBL_DICT":"表1"}
-    proxy.$request("get_table", route.query).then(data => {
+    proxy.$request("get_table", connection.value).then(data => {
         let tableData = {}
         data.forEach(e => {
-            let key=e.id+"-"+e.databases
+            let key = e.id + "-" + e.databases
             if (!tableData[key]) {
-                tableData[key]={}
+                tableData[key] = {}
             }
-            tableData[key][e.name]=e.comment
+            tableData[key][e.name] = e.comment
         })
         var key = queryVal["databaseId"] + "-" + queryVal["schemaType"];
         var data = tableData[key];
@@ -72,7 +111,8 @@ function getTablesOfSchema(selfObj, queryVal, callbackHint) {
 function getColsOfSchema(selfObj, queryVal, callbackHint) {
     //表字段合集，根据条件动态查询接口返回，因为所有表字段的数量可能达到数万+++，不可能一次性存在前端
     var sqlTables = {};
-    proxy.$request("get_table_and_field", route.query).then(data => {
+    console.log(999)
+    proxy.$request("get_table_and_field", connection.value).then(data => {
         console.log('查询字段', queryVal)
         console.log(data)
         var t = data[queryVal["databaseId"]];
@@ -92,6 +132,34 @@ function getColsOfSchema(selfObj, queryVal, callbackHint) {
     
 }
 
+function exampleDataInit() {
+    
+    
+    // schema信息（从接口获取）
+    var schemaMap = getAllTables();
+    var databaseMap = {};
+    console.log(databaseList.value)
+    databaseList.value.forEach(e => {
+        databaseMap[item.id] = item;
+    })
+    selfObj.schemaTypes = {};
+    schemaMap[selfObj.databaseId].forEach(e => {
+        selfObj.schemaTypes[e] = false;
+    })
+    if (selfObj.sqlEditor) {
+        //修改schema集合
+        selfObj.hintOptions["schemaTypes"] = selfObj.schemaTypes;
+        //修改sql类型
+        var mappingDbType = {"postgres": "text/x-pgsql", "mysql": "text/x-mysql"};
+        selfObj.sqlEditor.setOption("sqlMode", mappingDbType[databaseMap[selfObj.databaseId].type]);
+    }
+    selfObj.mainSchema = databaseMap[selfObj.databaseId].type
+    selfObj.schemaTypes.forEach(e => {
+        selfObj.schemaTypes[e] = (selfObj.mainSchema === e);
+    })
+    
+}
+
 const getContent = () => {
     return editorItem.getValue()
 }
@@ -103,10 +171,30 @@ const setContent = (content) => {
 const setDatabase = () => {
 
 }
+const setConnection = (data) => {
+    connection.value = data
+    initEditor()
+}
+
+const databaseList = ref()
+
+const setDataBases = (a, b) => {
+    databaseList.value = a.value.map(e => {
+        return {id: e.id, type: "mysql", title: e.name}
+    })
+    if (databaseList.value.length === 1) {
+        selfObj.databaseId = databaseList.value[0].id
+    } else {
+        selfObj.databaseId = b.value.id
+    }
+    selfObj.databaseId = b
+}
 
 defineExpose({
     getContent,
-    setContent
+    setContent,
+    setConnection,
+    setDataBases
 })
 
 </script>
