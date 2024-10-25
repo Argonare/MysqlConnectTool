@@ -20,7 +20,7 @@ import 'codemirror/addon/hint/show-hint.js'
 import {getCurrentInstance, onMounted, ref} from "vue";
 import {useRoute} from "vue-router";
 
-let connection = ref()
+let connection = ref({})
 const codemirror = ref()
 let selfObj = ref({
     existTables: {}, //已查询的表
@@ -32,18 +32,19 @@ let selfObj = ref({
     hintOptions: null, //提示框hint对象
 });
 let editorItem;
+
 onMounted(() => {
-    
-    if (route.query) {
-        connection.value = route.query
-        initEditor()
-    }
+    console.log("初始化myEditor页面")
+    initEditor()
     
 });
 
-function initEditor() {
-    selfObj.existTables = getAllTables();
-    // exampleDataInit();
+async function initEditor() {
+    if (!connection.value.database) {
+        return;
+    }
+    selfObj.existTables = await getAllTables();
+    // exampleDataInit(selfObj.existTables);
     mybatisHandler(CodeMirror)
     mybatisHintHandler(CodeMirror)
     sqlqueryHandler(CodeMirror)
@@ -54,10 +55,11 @@ function initEditor() {
 }
 
 
-function getAllTables(databaseId) {
+async function getAllTables(databaseId) {
     
     if (!connection.value.database) {
-        return;
+        console.log("database为空")
+        return null;
     }
     return new Promise((resolve, reject) => {
         proxy.$request("get_table", connection.value).then(data => {
@@ -132,20 +134,20 @@ function getColsOfSchema(selfObj, queryVal, callbackHint) {
     
 }
 
-function exampleDataInit() {
-    
+function exampleDataInit(schemaMap) {
+    console.log(schemaMap)
     
     // schema信息（从接口获取）
-    var schemaMap = getAllTables();
     var databaseMap = {};
     console.log(databaseList.value)
-    databaseList.value.forEach(e => {
+    databaseList.value.forEach(item => {
         databaseMap[item.id] = item;
     })
     selfObj.schemaTypes = {};
-    schemaMap[selfObj.databaseId].forEach(e => {
-        selfObj.schemaTypes[e] = false;
-    })
+    for (let k in schemaMap[selfObj.databaseId]) {
+        selfObj.schemaTypes[k] = false;
+    }
+    
     if (selfObj.sqlEditor) {
         //修改schema集合
         selfObj.hintOptions["schemaTypes"] = selfObj.schemaTypes;
@@ -176,18 +178,20 @@ const setConnection = (data) => {
     initEditor()
 }
 
-const databaseList = ref()
+const databaseList = ref([])
 
 const setDataBases = (a, b) => {
     databaseList.value = a.value.map(e => {
-        return {id: e.id, type: "mysql", title: e.name}
+        return {id: e.id, type: "mysql", title: e.name,database:e.database}
     })
-    if (databaseList.value.length === 1) {
-        selfObj.databaseId = databaseList.value[0].id
+    if (databaseList.value.length === 1 && databaseList.value[0].database) {
+        selfObj.databaseId = databaseList.value[0].database
+        connection.value = databaseList.value[0]
     } else {
-        selfObj.databaseId = b.value.id
+        selfObj.databaseId = b.value.database
+        connection.value = b.value
     }
-    selfObj.databaseId = b
+    
 }
 
 defineExpose({
