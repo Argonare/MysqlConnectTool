@@ -29,6 +29,10 @@ const routes = [
         path: "/changeLog",
         name: "表变更记录",
         component: () => import(/* webpackChunkName: "about" */ "../components/level2/changeLog.vue"),
+    }, {
+        path: "/preSet",
+        name: "插入字段预设",
+        component: () => import(/* webpackChunkName: "about" */ "../components/level2/preSet.vue"),
     }
 ];
 

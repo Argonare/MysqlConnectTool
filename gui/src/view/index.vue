@@ -104,10 +104,13 @@ const addConnect = () => {
 const openEditor = () => {
     router.push({path: "/sqlEditor"})
 }
+const preSet = () => {
+    router.push({path: "/preSet"})
+}
 </script>
 
 <template>
-    <menu-item class="width100 menuClass"></menu-item>
+<!--    <menu-item class="width100 menuClass"></menu-item>-->
     <div class="scroll width100">
         <el-col :span="24" class="flex" style="height: 62px">
             <div class="flex flexColumn iconItem justCenter" @click="addConnect">
@@ -122,6 +125,13 @@ const openEditor = () => {
                     查询
                 </div>
             </div>
+            <div class="flex flexColumn iconItem justCenter" @click="preSet">
+               <Reading class="btnIcon"/>
+                <div>
+                    预设
+                </div>
+            </div>
+            
         </el-col>
         <el-col :span="24" class="flex heightMax ">
             <div class=" white" id="left-tree">
@@ -240,7 +250,7 @@ footer {
     background-color: #F7F7F7;
     display: flex;
     flex-wrap: wrap;
-    height: calc(100% - 80px);
+    height: calc(100% - 20px);
 }
 
 </style>

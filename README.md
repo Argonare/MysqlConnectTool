@@ -35,15 +35,16 @@
 - [x] 注释字段切换（switch comment and field）
 - [x] 隐藏某列字段（hide someone field）
 - [ ] 筛选字段方案（Filter Field Scheme）
-- [ ] 更好的sql提示（better sql prompts）
+- [x] 更好的sql提示（better sql prompts）
 - [x] 查看数据表语句（view sql how to create table or field）
-- [ ] 查看数据库变更记录（view history of table or field changed）
-- [ ] 字段预设方案，如创建时间，创建人等（add preset scheme,like create_time,create by etc.）
+- [x] 查看数据库变更记录（view history of table or field changed）
+- [x] 字段预设方案，如创建时间，创建人等（add preset scheme,like create_time,create by etc.）
 - [ ] 拍照生成表和数据（parse photo and generate table and data from photo）
 - [ ] 适配mybatis,包括运行，解析等（Adapt and generate mybatis sql xml,include run and parse）
 - [ ] 连接redis（connect redis）
 - [ ] 编辑模式和查询模式（直接代替sql查询？）（edit mode and select mode ,may replace select by sql?）
 - [ ] 假数据生成（fake data generate）
+- [ ] 自定义预设字段（custom preset scheme） 
 
 其他的想到了再说（when I think of something new,I will add it to this list）
 

@@ -80,6 +80,7 @@ class API(System, Storage):
 
     change_log_path = os.environ['USERPROFILE'] + "/database/changeLog.json"
     config_path = os.environ['USERPROFILE'] + "/database/data.json"
+    pre_set_path = os.environ['USERPROFILE'] + "/database/preSet.json"
 
     def save_change_log(self, data: Connect,cmd:str, sql: list):
         change_log = {}

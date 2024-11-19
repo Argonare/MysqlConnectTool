@@ -190,81 +190,16 @@ const rules = {
         {required: true, message: '请输入备注', trigger: 'change'},
     ]
 }
-const addToTable=(field)=>{
-     let index=ruleForm.value.tableData.findIndex(e=>e.field===field.field)
-    if(index===-1){
-         ruleForm.value.tableData.push(field)
-    }else{
-        ruleForm.value.tableData[index]=field
+const addToTable = (field) => {
+    let index = ruleForm.value.tableData.findIndex(e => e.field === field.field)
+    if (index === -1) {
+        ruleForm.value.tableData.push(field)
+    } else {
+        ruleForm.value.tableData[index] = field
     }
-}
-const handleClick = (command) => {
-    let field = {}
-    if (command === 'userInt') {
-        field = {
-            field: "createBy",
-            type: "int",
-            len: 11,
-            default: "NULL",
-            isNull: true,
-            primary: false,
-            comment: "创建人"
-        }
-    } else if (command === 'userChar') {
-        field = {
-            field: "createBy",
-            type: "varchar",
-            len: 100,
-            default: "NULL",
-            isNull: true,
-            primary: false,
-            comment: "创建人"
-        }
-    } else if (command === 'createTimeChar') {
-        field = {
-            field: "createTime",
-            type: "varchar",
-            len: 32,
-            default: "NULL",
-            isNull: true,
-            primary: false,
-            comment: "创建时间"
-        }
-    } else if (command === 'createTime') {
-        field = {
-            field: "createTime",
-            type: "datetime",
-            len: null,
-            default: "NULL",
-            isNull: true,
-            primary: false,
-            comment: "创建时间"
-        }
-    } else if (command === 'userCreateTime') {
-        field = {
-            field: "createBy",
-            type: "int",
-            len: 11,
-            default: "NULL",
-            isNull: true,
-            primary: false,
-            comment: "创建人"
-        }
-        addToTable(field)
-        field = {
-            field: "createTime",
-            type: "varchar",
-            len: 32,
-            default: "NULL",
-            isNull: true,
-            primary: false,
-            comment: "创建时间"
-        }
-    }
-   addToTable(field)
 }
 const pDelete = () => {
-    let data=ruleForm.value.tableData[activeRow.value]
+    let data = ruleForm.value.tableData[activeRow.value]
     ElMessageBox.confirm('是否删除字段 ' + data.field, '警告', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
@@ -307,26 +242,6 @@ const pDelete = () => {
                     <CircleClose/>
                 </el-icon>
                 <div class="barFont">删除字段</div>
-            </div>
-            <div class="flexRow primaryBtn rightItem">
-                <el-dropdown @command="handleClick">
-                    <div class="flexRow">
-                        <el-icon>
-                            <ArrowDown/>
-                        </el-icon>
-                        <div class="barFont">预设字段</div>
-                    </div>
-                    <template #dropdown>
-                        <el-dropdown-menu>
-                            <el-dropdown-item command="userInt">创建人（int）</el-dropdown-item>
-                            <el-dropdown-item command="userChar">创建人（varchar）</el-dropdown-item>
-                            <el-dropdown-item command="createTimeChar">创建时间（varchar）</el-dropdown-item>
-                            <el-dropdown-item command="createTime">创建时间（datetime）</el-dropdown-item>
-                            <el-dropdown-item command="userCreateTime">创建时间（varchar）+创建人（int）</el-dropdown-item>
-                        </el-dropdown-menu>
-                    </template>
-                </el-dropdown>
-            
             </div>
         </div>
         <el-form :model="ruleForm" ref="formRef">
