@@ -44,14 +44,14 @@ async function initEditor() {
         return;
     }
     selfObj.existTables = await getAllTables();
-    // exampleDataInit(selfObj.existTables);
+    exampleDataInit(selfObj.existTables);
     mybatisHandler(CodeMirror)
     mybatisHintHandler(CodeMirror)
     sqlqueryHandler(CodeMirror)
     sqlqueryHintHandler(CodeMirror)
     
     editorItem = createMybatisEditor(selfObj.value, "codemirror", codemirror.value);
-    keypressSqlEditor(selfObj.value, getColsOfSchema, getTablesOfSchema);
+    keypressSqlEditor(selfObj, getColsOfSchema, getTablesOfSchema);
 }
 
 
@@ -65,11 +65,11 @@ async function getAllTables(databaseId) {
         proxy.$request("get_table", connection.value).then(data => {
             let tableData = {}
             data.forEach(e => {
-                let key = e.databases
+                let key = connection.value.title+"."+e.databases
                 if (!tableData[key]) {
                     tableData[key] = {}
                 }
-                tableData[key][e.name] = e.comment
+                tableData[key][connection.value.title+"."+e.name] = e.comment
             })
             resolve(tableData)
             console.log("获取数据库信息>>", tableData);
@@ -141,7 +141,7 @@ function exampleDataInit(schemaMap) {
     var databaseMap = {};
     console.log(databaseList.value)
     databaseList.value.forEach(item => {
-        databaseMap[item.id] = item;
+        databaseMap[item.title+"."+item.database] = item;
     })
     selfObj.schemaTypes = {};
     for (let k in schemaMap[selfObj.databaseId]) {
@@ -155,10 +155,10 @@ function exampleDataInit(schemaMap) {
         var mappingDbType = {"postgres": "text/x-pgsql", "mysql": "text/x-mysql"};
         selfObj.sqlEditor.setOption("sqlMode", mappingDbType[databaseMap[selfObj.databaseId].type]);
     }
-    selfObj.mainSchema = databaseMap[selfObj.databaseId].type
-    selfObj.schemaTypes.forEach(e => {
+    selfObj.mainSchema = databaseMap[selfObj.databaseId].title
+    for (let e in selfObj.schemaTypes) {
         selfObj.schemaTypes[e] = (selfObj.mainSchema === e);
-    })
+    }
     
 }
 
@@ -182,13 +182,14 @@ const databaseList = ref([])
 
 const setDataBases = (a, b) => {
     databaseList.value = a.value.map(e => {
-        return {id: e.id, type: "mysql", title: e.name,database:e.database}
+        return {id: e.id, type: "mysql", title: e.name, database: e.database}
     })
     if (databaseList.value.length === 1 && databaseList.value[0].database) {
-        selfObj.databaseId = databaseList.value[0].database
+        let dm=databaseList.value[0]
+        selfObj.databaseId = dm.title+"."+dm.database
         connection.value = databaseList.value[0]
     } else {
-        selfObj.databaseId = b.value.database
+        selfObj.databaseId = b.name+"."+b.value.database
         connection.value = b.value
     }
     

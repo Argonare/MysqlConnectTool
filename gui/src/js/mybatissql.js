@@ -541,9 +541,9 @@ function createSqlEditor(selfObj,id){
   };
 */
 export function keypressSqlEditor(selfObj,getColsOfSchema,getTablesOfSchema){
-    selfObj.hintOptions=selfObj.sqlEditor.getOption("hintOptions");
+    selfObj.hintOptions=selfObj.value.sqlEditor.getOption("hintOptions");
     console.log(111)
-    selfObj.sqlEditor.on('keypress', (editor, e) => {
+    selfObj.value.sqlEditor.on('keypress', (editor, e) => {
            selfObj.hintOptions.tables={};
            selfObj.hintOptions.tempSqlTables = {};
            selfObj.hintOptions.sqlTables = {};
