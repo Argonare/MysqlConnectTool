@@ -5,7 +5,7 @@ import {useRoute} from "vue-router";
 import {ElMessage, ElMessageBox} from "element-plus";
 
 onMounted(() => {
-    
+    getPreSetData()
     getData()
 })
 
@@ -21,6 +21,20 @@ let oldValue = null;
 let tableMap = {}
 const typeMap = reactive({})
 const changeList = {}
+let preSetMap = ref({})
+const getPreSetData = () => {
+    proxy.$request("get_pre_set", {}).then(data => {
+        if (data != null && data.length !== 0) {
+            data.forEach(item => {
+                if (preSetMap.value[item["name"]] == null) {
+                    preSetMap.value[item["name"]] = []
+                }
+                preSetMap.value[item["name"]].push(item)
+            })
+        }
+    })
+}
+
 
 const getData = () => {
     if (route.query.table == null) {
@@ -190,15 +204,21 @@ const rules = {
         {required: true, message: '请输入备注', trigger: 'change'},
     ]
 }
-const addToTable=(field)=>{
-     let index=ruleForm.value.tableData.findIndex(e=>e.field===field.field)
-    if(index===-1){
-         ruleForm.value.tableData.push(field)
-    }else{
-        ruleForm.value.tableData[index]=field
+const addToTable = (field) => {
+    let index = ruleForm.value.tableData.findIndex(e => e.field === field.field)
+    if (index === -1) {
+        ruleForm.value.tableData.push(field)
+    } else {
+        ruleForm.value.tableData[index] = field
     }
 }
 const handleClick = (command) => {
+    if (preSetMap.value.size !== 0) {
+        command.forEach(e => {
+            addToTable(e)
+        })
+        return;
+    }
     let field = {}
     if (command === 'userInt') {
         field = {
@@ -261,10 +281,10 @@ const handleClick = (command) => {
             comment: "创建时间"
         }
     }
-   addToTable(field)
+    addToTable(field)
 }
 const pDelete = () => {
-    let data=ruleForm.value.tableData[activeRow.value]
+    let data = ruleForm.value.tableData[activeRow.value]
     ElMessageBox.confirm('是否删除字段 ' + data.field, '警告', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
@@ -318,11 +338,18 @@ const pDelete = () => {
                     </div>
                     <template #dropdown>
                         <el-dropdown-menu>
-                            <el-dropdown-item command="userInt">创建人（int）</el-dropdown-item>
-                            <el-dropdown-item command="userChar">创建人（varchar）</el-dropdown-item>
-                            <el-dropdown-item command="createTimeChar">创建时间（varchar）</el-dropdown-item>
-                            <el-dropdown-item command="createTime">创建时间（datetime）</el-dropdown-item>
-                            <el-dropdown-item command="userCreateTime">创建时间（varchar）+创建人（int）</el-dropdown-item>
+                            <template v-if="preSetMap.size===0">
+                                <el-dropdown-item command="userInt">创建人（int）</el-dropdown-item>
+                                <el-dropdown-item command="userChar">创建人（varchar）</el-dropdown-item>
+                                <el-dropdown-item command="createTimeChar">创建时间（varchar）</el-dropdown-item>
+                                <el-dropdown-item command="createTime">创建时间（datetime）</el-dropdown-item>
+                                <el-dropdown-item command="userCreateTime">创建时间（varchar）+创建人（int）
+                                </el-dropdown-item>
+                            </template>
+                            <template v-else>
+                                <el-dropdown-item :command="item" v-for="item in preSetMap">{{ item[0].name }}
+                                </el-dropdown-item>
+                            </template>
                         </el-dropdown-menu>
                     </template>
                 </el-dropdown>

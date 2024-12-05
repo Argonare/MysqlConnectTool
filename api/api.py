@@ -82,23 +82,34 @@ class API(System, Storage):
     config_path = os.environ['USERPROFILE'] + "/database/data.json"
     pre_set_path = os.environ['USERPROFILE'] + "/database/preSet.json"
 
-    def save_change_log(self, data: Connect,cmd:str, sql: list):
+    def save_change_log(self, data: Connect, cmd: str, sql: list):
         change_log = {}
         get_file(self.change_log_path, "{}", change_log)
         for i in sql:
             if data.name + "." + data.database in change_log:
                 change_list: list = change_log[data.name + "." + data.database]
-                change_list.append({"sql": cmd+' '+i, "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())})
+                change_list.append({"sql": cmd + ' ' + i, "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())})
             else:
                 change_log[data.name + "." + data.database] = [
-                    {"sql": cmd+' '+i, "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}]
+                    {"sql": cmd + ' ' + i, "time": time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}]
         with open(self.change_log_path, "w") as f:
             f.write(json.dumps(change_log))
+
+    def get_pre_set(self, emptyData):
+        pre_set_config = []
+        pre_set_config = get_file(self.pre_set_path, "[]", pre_set_config)
+        return success(pre_set_config)
+
+    def save_pre_set(self, data):
+        if data is not None and len(data) != 0:
+            with open(self.pre_set_path, 'w', encoding="utf-8") as f:
+                f.write(json.dumps(data))
+        return success()
 
     @connect
     def get_change_log(self, data: Connect, db, other):
         change_log = {}
-        change_log=get_file(self.change_log_path, "{}", change_log)
+        change_log = get_file(self.change_log_path, "{}", change_log)
         return success(change_log)
 
     def get_config(self, emptyData):
@@ -285,7 +296,7 @@ class API(System, Storage):
                 alert_lis.append(content)
         if len(alert_lis) > 0:
             self.cursor_data(db, cmd + ",".join(alert_lis) + ";")
-        self.save_change_log(data,cmd, alert_lis)
+        self.save_change_log(data, cmd, alert_lis)
         print(cmd + ",".join(alert_lis))
         return success()
 
@@ -337,14 +348,14 @@ class API(System, Storage):
         table: list = self.cursor_data(db, cmd)
         md = hashlib.md5(data.database.encode())
         id = md.hexdigest()
-        table_map={}
-        table_map[id]={}
+        table_map = {}
+        table_map[id] = {}
         for i in table:
-            table_name=i[list(i.keys())[0]]
-            sub_key=table_name
+            table_name = i[list(i.keys())[0]]
+            sub_key = table_name
             table_map[id][sub_key] = [[], [], []]
-            cmd = 'show full columns from '+table_name+';'
-            table_info=self.cursor_data(db, cmd)
+            cmd = 'show full columns from ' + table_name + ';'
+            table_info = self.cursor_data(db, cmd)
             for j in table_info:
                 table_map[id][sub_key][0].append(list(j.keys())[0])
                 table_map[id][sub_key][1].append(list(j.keys())[8])

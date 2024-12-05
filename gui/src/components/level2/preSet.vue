@@ -1,12 +1,16 @@
 <script setup>
-import {getCurrentInstance, onMounted, reactive, ref} from "vue";
+import {computed, getCurrentInstance, onMounted, reactive, ref} from "vue";
 import {emptyDefault, sqlFieldType} from "@/js/common";
 import {useRoute} from "vue-router";
 import {ElMessage, ElMessageBox} from "element-plus";
 
 onMounted(() => {
-    
-    getData()
+    window.addEventListener('pywebviewready', function () {
+        getData()
+    })
+    if (window.pywebview) {
+        getData()
+    }
 })
 
 
@@ -23,29 +27,79 @@ const typeMap = reactive({})
 const changeList = {}
 
 const getData = () => {
-    if (route.query.table == null) {
-        return
-    }
-    proxy.$request("desc_table", route.query).then(data => {
+    proxy.$request("get_pre_set", {}).then(data => {
         ruleForm.value.tableData = []
-        data.forEach((e, index) => {
-            var reg = /[1-9][0-9]*/g
-            let matchRes = e.Type.match(reg)
-            let item = {
-                index: index,
-                field: e.Field,
-                type: e.Type.split("(")[0],
-                len: matchRes && matchRes.length > 0 ? matchRes[0] : null,
-                pointLen: matchRes && matchRes.length > 1 ? matchRes[1] : null,
-                isNull: e.Null === 'YES',
-                comment: emptyDefault(e.Comment),
-                hideFlag: false,
-                primary: e.Key === "PRI",
-                default: e.Default == null ? 'NULL' : e.Default
-            }
-            ruleForm.value.tableData.push(item)
-            tableMap[item["field"]] = JSON.parse(JSON.stringify(item))
-        })
+        if (data == null || data.length === 0) {
+            ruleForm.value.tableData = [{
+                index: 0,
+                name: "创建人（int）",
+                field: "createBy",
+                type: "int",
+                len: 11,
+                default: "NULL",
+                isNull: true,
+                primary: false,
+                comment: "创建人"
+            }, {
+                index: 1,
+                name: "创建人（varchar）",
+                field: "createBy",
+                type: "varchar",
+                len: 100,
+                default: "NULL",
+                isNull: true,
+                primary: false,
+                comment: "创建人"
+            }, {
+                index: 2,
+                name: "创建时间（varchar）",
+                field: "createTime",
+                type: "varchar",
+                len: 32,
+                default: "NULL",
+                isNull: true,
+                primary: false,
+                comment: "创建时间"
+            }, {
+                index: 3,
+                name: "创建时间（datetime）",
+                field: "createTime",
+                type: "datetime",
+                len: null,
+                default: "NULL",
+                isNull: true,
+                primary: false,
+                comment: "创建时间"
+            }, {
+                index: 4,
+                name: "创建时间（varchar）+创建人（int）",
+                field: "createBy",
+                type: "int",
+                len: 11,
+                default: "NULL",
+                isNull: true,
+                primary: false,
+                comment: "创建人"
+            }, {
+                index: 5,
+                name: "创建时间（varchar）+创建人（int）",
+                field: "createTime",
+                type: "varchar",
+                len: 32,
+                default: "NULL",
+                isNull: true,
+                primary: false,
+                comment: "创建时间"
+            }]
+            ruleForm.value.tableData.forEach(e => {
+                changeList[e.index] = e
+            })
+        } else {
+            data.forEach(item => {
+                ruleForm.value.tableData.push(item)
+                tableMap[item["field"]] = JSON.parse(JSON.stringify(item))
+            })
+        }
     })
 }
 const iptBlur = async (scope, e, field) => {
@@ -121,32 +175,16 @@ const save = async () => {
         ElMessage.error('表格数据存在异常')
         return
     }
-    if (JSON.stringify(changeList) === "{}") {
-        return
-    }
-    let obj = []
+    let param = []
     
     for (let item in changeList) {
-        obj.push(changeList[item])
+        param.push(changeList[item])
     }
     
-    let param = {...route.query, ...{changeList: obj}}
-    if (route.query.table == null) {
-        ElMessageBox.prompt('提示', '请输入表名', {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-        }).then(({value}) => {
-            param.table = value
-            proxy.$request("add_table", param).then(data => {
-                changeList.value = []
-            })
-        })
-    } else {
-        
-        proxy.$request("alert_table", param).then(data => {
-            changeList.value = []
-        })
-    }
+    proxy.$request("save_pre_set", param).then(data => {
+        changeList.value = []
+        ElMessage.success("保存成功")
+    })
     
     
 }
@@ -160,6 +198,9 @@ const changeType = (data, row) => {
     row.pointLen = typeMap[data].pointLen
 }
 const rules = {
+    displayName: [
+        {required: true, message: '请输入显示的名称', trigger: 'change'},
+    ],
     field: [
         {required: true, message: '请输入字段名称', trigger: 'change'},
     ],
@@ -213,6 +254,45 @@ const pDelete = () => {
     })
     
 }
+
+
+const tableDataColumn = computed(() => {
+    const obj = {};
+    ruleForm.value.tableData.forEach((v, i) => {
+        const id = v.name;
+        if (obj[id]) {
+            obj[id].push(i);
+        } else {
+            obj[id] = [];
+            obj[id].push(i);
+        }
+    });
+    
+    return obj;
+})
+
+
+const objectSpanMethod = ({row, column, rowIndex, columnIndex,}) => {
+    if (columnIndex < 2 && !row.add) {
+        if (rowIndex > 0 && row.name === ruleForm.value.tableData[rowIndex - 1].name) {
+            return {
+                rowspan: 0,
+                colspan: 0,
+            };
+        } else {
+            const id = row.name;
+            const rows = tableDataColumn.value[id];
+            const length = rows.length;
+            return {
+                rowspan: length,
+                colspan: 1,
+            };
+        }
+    }
+    
+}
+
+
 </script>
 
 <template>
@@ -229,30 +309,39 @@ const pDelete = () => {
                 <el-icon>
                     <CirclePlus/>
                 </el-icon>
-                <div class="barFont">添加字段</div>
+                <div class="barFont">添加一行</div>
             </div>
             <div class="flexRow primaryBtn" @click="pAdd">
                 <el-icon>
                     <ArrowLeft/>
                 </el-icon>
-                <div class="barFont">插入字段</div>
+                <div class="barFont">插入预设</div>
             </div>
             <div class="flexRow dangerBtn" @click="pDelete">
                 <el-icon>
                     <CircleClose/>
                 </el-icon>
-                <div class="barFont">删除字段</div>
+                <div class="barFont">删除预设</div>
             </div>
         </div>
         <el-form :model="ruleForm" ref="formRef">
             <el-table :data="ruleForm.tableData" style="width: 100%" border class="subTable"
-                      :row-class-name="selectedRow"
+                      :row-class-name="selectedRow" :span-method="objectSpanMethod"
                       @cell-click="(row, column, cell, event)=>icoClick(row)">
                 <el-table-column width="40" align="center" prop="ico">
                     <template #default="scope">
                         <el-icon>
                             <ArrowRight/>
                         </el-icon>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="name" label="名称" width="150">
+                    <template #default="scope">
+                        <el-form-item :prop="'tableData.' + scope.$index + '.name'" :rules="rules.displayName">
+                            <el-input size="small" v-model="scope.row.name" v-focus v-if="canEdit(scope)"
+                                      @blur="iptBlur(scope, $event,'name')"/>
+                            <div @click="cellClick(scope)" class="height20" v-else>{{ scope.row.name }}</div>
+                        </el-form-item>
                     </template>
                 </el-table-column>
                 <el-table-column prop="field" label="字段名" width="150">
