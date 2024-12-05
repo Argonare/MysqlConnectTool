@@ -14,7 +14,7 @@ usage: 运行前，请确保本机已经搭建Python3开发环境，且已经安
 from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).absolute().parent.parent.parent))
-from config.config import Config
+from pyapp.config.config import Config
 
 cfg = Config()
 

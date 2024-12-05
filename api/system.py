@@ -4,7 +4,7 @@
 Author: 潘高
 LastEditors: 潘高
 Date: 2023-03-26 20:48:26
-LastEditTime: 2023-05-30 15:40:45
+LastEditTime: 2024-09-08 20:36:03
 Description: 系统类
 usage: 调用window.pywebview.api.<methodname>(<parameters>)从Javascript执行
 '''
@@ -23,12 +23,12 @@ from pyapp.update.update import AppUpdate
 class System():
     '''系统类'''
 
-    window = None
+    _window = None
 
     def system_py2js(self, func, info):
         '''调用js中挂载到window的函数'''
         infoJson = json.dumps(info)
-        System.window.evaluate_js(f"{func}('{infoJson}')")
+        System._window.evaluate_js(f"{func}('{infoJson}')")
 
     def system_getAppInfo(self):
         '''程序基础配置信息'''
@@ -39,19 +39,19 @@ class System():
 
     def system_checkNewVersion(self):
         '''检查更新'''
-        appUpdate = AppUpdate()  # 程序更新类
+        appUpdate = AppUpdate()    # 程序更新类
         res = appUpdate.check()
         return res
 
     def system_downloadNewVersion(self):
         '''下载新版本'''
-        appUpdate = AppUpdate()  # 程序更新类
+        appUpdate = AppUpdate()    # 程序更新类
         res = appUpdate.run()
         return res
 
     def system_cancelDownloadNewVersion(self):
         '''取消下载新版本'''
-        appUpdate = AppUpdate()  # 程序更新类
+        appUpdate = AppUpdate()    # 程序更新类
         res = appUpdate.cancel()
         return res
 
@@ -73,9 +73,8 @@ class System():
         '''打开文件对话框'''
         # 可选文件类型
         # fileTypes = ['Excel表格 (*.xlsx;*.xls)']
-        fileTypes = tuple(fileTypes)  # 要求必须是元组
-        result = System.window.create_file_dialog(dialog_type=webview.OPEN_DIALOG, directory=directory,
-                                                  allow_multiple=True, file_types=fileTypes)
+        fileTypes = tuple(fileTypes)    # 要求必须是元组
+        result = System._window.create_file_dialog(dialog_type=webview.OPEN_DIALOG, directory=directory, allow_multiple=True, file_types=fileTypes)
         resList = list()
         if result is not None:
             for res in result:
@@ -90,4 +89,3 @@ class System():
                     'path': res
                 })
         return resList
-
