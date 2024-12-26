@@ -9,20 +9,18 @@ Description: 业务层API，供前端JS调用
 usage: 在Javascript中调用window.pywebview.api.<methodname>(<parameters>)
 '''
 import json
-import os
 import hashlib
 import time
 import uuid
-from copy import deepcopy
 from functools import wraps
 
-import pymysql
 import sqlparse
 from pymysql import OperationalError, Connection
 from pymysql.cursors import DictCursor
 
 from api.apiUtil import *
-from api.apiUtil import convert, create_connect, success
+from api.apiUtil import success
+from api.connect.connect_base import ConnectBase
 from api.model.dbField import DbField
 from api.storage import Storage
 from api.system import System
@@ -46,20 +44,8 @@ class API(System, Storage):
     def connect(func) -> object:
         @wraps(func)
         def decorate(self, data):
-            connect, other = convert(Connect, data)
-            connect_name = connect.name
-            if not check_empty(connect.database):
-                connect_name = connect.name + ":" + connect.database
-            final_connect = connect
-            if connect_name not in self.db_connect:
-                if connect.name in self.db_connect:
-                    final_connect: Connect = deepcopy(self.db_connect[connect.name])
-                    final_connect.database = connect.database
-                self.db_connect[connect_name] = final_connect
-            else:
-                final_connect = self.db_connect[connect_name]
-            final_connect.table = connect.table
-            db = create_connect(final_connect)
+            connect, db, other = self.db_base.open_connect(data)
+
             return func(self, connect, db, other)
 
         return decorate
@@ -72,7 +58,7 @@ class API(System, Storage):
         return data
 
     def __init__(self):
-        self.db_connect = {}
+        self.db_base = ConnectBase()
 
     def setWindow(self, window):
         '''获取窗口实例'''
@@ -98,6 +84,9 @@ class API(System, Storage):
     def get_pre_set(self, emptyData):
         pre_set_config = []
         pre_set_config = get_file(self.pre_set_path, "[]", pre_set_config)
+        for i in pre_set_config:
+            if "type" not in i:
+                i["type"] = "mysql"
         return success(pre_set_config)
 
     def save_pre_set(self, data):
@@ -119,30 +108,28 @@ class API(System, Storage):
         for i in saved:
             connect = Connect()
             connect.__dict__ = i
-            self.db_connect[connect.name] = connect
-            result.append({"id": i["id"], "name": i["name"]})
+            self.db_base.set_config(connect.name, connect)
+            result.append({"id": i["id"], "name": i["name"], "type": i["type"]})
         return success(result)
 
     def save_config(self, data):
         data[-1]["id"] = str(uuid.uuid4())
+        saved = []
+        result = get_file(self.config_path, "[]", saved)
+        result.append(data[-1])
         with open(self.config_path, 'w', encoding="utf-8") as f:
-            f.write(json.dumps(data))
+            f.write(json.dumps(result))
         return success()
 
     @connect
     def test_connect(self, data: Connect, db, other):
-        db = create_connect(data)
-        db.close()
+        self.db_base.open_connect(data)
         return success()
 
     @connect
-    @close_connect
     def get_database(self, data: Connect, db, other):
-        cmd = "show databases"
-        database: list = self.cursor_data(db, cmd)
-        for i in database:
-            i["name"] = i["Database"]
-        return success(database)
+
+        return success(self.db_base.get_databases(data, db))
 
     @connect
     def get_table(self, data: Connect, db, other):

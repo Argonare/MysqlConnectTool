@@ -33,21 +33,7 @@ def error(msg="操作失败"):
     return json.dumps({"code": 500, "msg": str(msg)})
 
 
-def convert(class_name: type, data):
-    other = {}
-    if type(data) == dict and type(class_name) == type:
-        new_class = class_name()
-        for i in data:
-            if hasattr(new_class, i):
-                setattr(new_class, i, data[i])
-            else:
-                other[i] = data[i]
-        if hasattr(new_class, "after_init"):
-            after_init = getattr(new_class, "after_init")
-            after_init()
-        return new_class, other
 
-    return data, other
 
 
 def get_cursor(db, cmd):
@@ -56,22 +42,7 @@ def get_cursor(db, cmd):
     return cursor
 
 
-def create_connect(connect: Connect):
-    db = None
 
-    try:
-        if connect.database is not None:
-            db = pymysql.connect(host=connect.ip, user=connect.username, password=connect.password,
-                                 port=int(connect.port),
-                                 database=connect.database, cursorclass=pymysql.cursors.DictCursor, conv=conv,
-                                 client_flag=CLIENT.MULTI_STATEMENTS)
-        else:
-            db = pymysql.connect(host=connect.ip, user=connect.username, password=connect.password,
-                                 port=int(connect.port), cursorclass=pymysql.cursors.DictCursor, conv=conv,
-                                 client_flag=CLIENT.MULTI_STATEMENTS)
-        return db
-    except Exception as err:
-        raise Exception(err)
 
 
 def check_empty(data: str):
