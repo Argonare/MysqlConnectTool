@@ -128,50 +128,19 @@ class API(System, Storage):
 
     @connect
     def get_database(self, data: Connect, db, other):
-
         return success(self.db_base.get_databases(data, db))
 
     @connect
     def get_table(self, data: Connect, db, other):
-
-        cmd = 'SELECT table_name,table_comment  FROM information_schema.TABLES WHERE TABLE_SCHEMA = "{0}"'.format(
-            data.database)
-        table: list = self.cursor_data(db, cmd)
-        for i in table:
-            i["name"] = i[list(i.keys())[0]]
-            i["comment"] = i[list(i.keys())[1]]
-            i["leaf"] = True
-            i["level"] = 3
-            md = hashlib.md5(data.database.encode())
-            i["id"] = md.hexdigest()
-            i["databases"] = data.database
-        return success(table)
+        return success(self.db_base.get_table(data, db))
 
     @connect
     def get_data(self, data: Connect, db, other):
-        page_size = other["pageSize"]  # 每页显示的记录数
-        current_page = other["currentPage"]  # 当前页码
-        where_data: str = other["whereData"]
-        if where_data is not None and where_data.strip() != '':
-            where_data = " where " + where_data
-        else:
-            where_data = ""
-        start_position = (current_page - 1) * page_size
-        cmd = "select * from " + data.table + where_data + " limit " + str(start_position) + "," + str(page_size)
-        table_data = self.cursor_data(db, cmd)
-        for i in table_data:
-            i["@uuid"] = str(uuid.uuid4())
-        count_cmd = "select count(1) as ct from " + data.table
-        ct = self.cursor_data(db, count_cmd)[0]["ct"]
-        return success({"list": table_data, "count": ct, "cmd": cmd})
+        return success(self.db_base.get_data(data, db, other))
 
     @connect
     def desc_table(self, data: Connect, db, other):
-        if data.table is not None:
-            cmd = "show full columns from  " + data.table
-            table_data = self.cursor_data(db, cmd)
-            return success(table_data)
-        return success()
+        return success(self.db_base.desc_table(data, db))
 
     @connect
     def update_table(self, data: Connect, db, other):

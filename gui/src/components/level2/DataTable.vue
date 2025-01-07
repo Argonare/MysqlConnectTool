@@ -436,7 +436,7 @@ const copySql = () => {
             </template>
         </el-table-column>
     </el-table>
-    <div class="flexRow">
+    <div class="flexRow" v-if="nowSql">
         <el-input v-model="nowSql" class="bottomSql" readonly></el-input>
         <el-button @click="copySql">复制</el-button>
     </div>

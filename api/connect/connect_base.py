@@ -32,7 +32,7 @@ class ConnectBase:
         db = self.db_bean[connect_name].create_connect()
         return connect, db, other
 
-    def get_databases(self, data: Connect,db):
+    def get_databases(self, data: Connect, db):
         return self.db_bean[data.name].get_databases(db)
 
     def set_config(self, name, data):
@@ -53,3 +53,12 @@ class ConnectBase:
             return new_class, other
 
         return data, other
+
+    def get_table(self, data: Connect, db):
+        return self.db_bean[data.name].get_table(data, db)
+
+    def desc_table(self, data: Connect, db):
+        return self.db_bean[data.name].desc_table(data, db)
+
+    def get_data(self, data: Connect, db, other):
+        return self.db_bean[data.name].get_data(data, db,other)

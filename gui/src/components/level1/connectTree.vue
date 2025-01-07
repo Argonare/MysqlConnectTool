@@ -3,6 +3,7 @@
 import {TreeOptionProps} from "element-plus/es/components/tree/src/tree.type";
 import {getCurrentInstance, onMounted, reactive, ref, toRaw, watch} from "vue";
 import useClipboard from 'vue-clipboard3'
+import {loadTree} from "@/js/connectTree";
 
 onMounted(() => {
     window.addEventListener('pywebviewready', function () {
@@ -69,6 +70,7 @@ interface Tree {
     name: string
     level: number
     database: string
+    type: string,
     children?: database[]
 }
 
@@ -83,16 +85,29 @@ interface table {
 
 let clickNum = 0
 const handleNodeClick = (data: Tree) => {
+    console.log(111)
     clickNum++;
     setTimeout(function () {
         if (clickNum === 2) {
-            if (data.level == 3) {
-                console.log("点击了左侧菜单")
+            console.log(data)
+            if (data.type === "mysql" && data.level == 3) {
+                console.log("点击了mysql左侧菜单")
                 let connect_data = toRaw(tree.value.getNode(data.id).parent.parent.data)
                 store.state.lastConnect = connect_data
                 connect_data.database = data.databases
                 connect_data.table = data.name
                 connect_data.nickName = data.name
+                // connect_data.comment=data.comment
+                delete connect_data.sql
+                router.push({path: "/DataTable", query: connect_data})
+            } else if (data.type === "redis" && data.level == 2) {
+                console.log("点击了redis左侧菜单")
+                let connect_data = toRaw(tree.value.getNode(data.id).parent.data)
+                store.state.lastConnect = connect_data
+                connect_data.database = data.databases
+                connect_data.table = data.name
+                connect_data.nickName = "DB" + data.name
+                console.log(connect_data)
                 // connect_data.comment=data.comment
                 delete connect_data.sql
                 router.push({path: "/DataTable", query: connect_data})
@@ -109,38 +124,13 @@ let defaultProps: TreeOptionProps = {
     isLeaf: 'leaf',
 }
 
-const loadNode = (node: Node, resolve: (data: Tree[]) => void, reject) => {
-    if (node.level === 1) {
-        console.log(node.data)
-        proxy.$request("get_database", toRaw(node.data)).then(data => {
-            data.forEach(e => {
-                e = <Tree>e
-                e.showName = e.name
-            })
-            return resolve(data)
-        }).catch(() => {
-            return reject()
-        })
-    } else if (node.level === 2) {
-        let d = JSON.parse(JSON.stringify(toRaw(node.parent.data)))
-        d.database = node.data.name
-        proxy.$request("get_table", d).then(data => {
-            data.forEach(e => {
-                e = <Tree>e
-                if (e.comment) {
-                    e.showName = `${e.comment}(${e.name})`
-                } else {
-                    e.showName = e.name
-                }
-            })
-            return resolve(data)
-        }).catch(() => {
-            return reject()
-        })
-    } else {
-        resolve(data)
+const loadNode = (node, resolve: (data: Tree[]) => void, reject) => {
+    let connectType = node.data.type
+    if (!connectType && node.parent) {
+        connectType = node.parent.data.type
     }
-    
+    console.log(connectType)
+    loadTree(node, resolve, reject, connectType, data, proxy)
 }
 //############################### 右键菜单 ####################
 let currentData = null;
@@ -273,6 +263,10 @@ defineExpose({
 const searchInput = ref()
 const getTypeImg = (data) => {
     if (data.type) {
+        console.log(data)
+        if (data.type == "redis" && data.level == 2) {
+            return `/src/assets/img/redisDb.svg`
+        }
         return `/src/assets/img/${data.type}.svg`
     }
     if (data.Database) {
