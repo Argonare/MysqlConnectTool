@@ -263,7 +263,6 @@ defineExpose({
 const searchInput = ref()
 const getTypeImg = (data) => {
     if (data.type) {
-        console.log(data)
         if (data.type == "redis" && data.level == 2) {
             return `/src/assets/img/redisDb.svg`
         }

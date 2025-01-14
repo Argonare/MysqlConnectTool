@@ -67,4 +67,26 @@ const loadMysqlTree = (node, resolve: (data: Tree[]) => void, reject, defaultDat
         resolve(defaultData)
     }
 }
-export {loadTree}
+
+const getFilterValue = (searchParam, type) => {
+    console.log(type)
+    let res = []
+    searchParam.forEach((e, index) => {
+        if (type == "mysql") {
+            let param = `${e.field} ${e.cal}`
+            if (!e.noValue) {
+                param += ` '${e.value}'`
+            }
+            if (index !== searchParam.length - 1) {
+                param += ` ${e.seq}`
+            }
+            res.push(param)
+        } else if (type == "redis") {
+            res.push(e.value)
+        }
+    })
+    return res
+}
+
+
+export {loadTree,getFilterValue}

@@ -33,5 +33,9 @@ class RedisConnect:
 
     def get_data(self, data: Connect, db, other):
         db.select(int(data.table))
-        result = [{"key": key, "value": db.get(key)} for key in db.scan_iter()]
-        return {"list": result, "count": len(result),}
+        if "whereData" in other and other["whereData"] is not None:
+            result = [{"key": key, "value": db.get(key)} for key in db.scan_iter(match='*' + other['whereData'] + '*')]
+
+        else:
+            result = [{"key": key, "value": db.get(key)} for key in db.scan_iter()]
+        return {"list": result, "count": len(result), }

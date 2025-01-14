@@ -64,8 +64,8 @@ class MysqlConnect:
         if data.table is not None:
             cmd = "show full columns from  " + data.table
             table_data = self.cursor_data(db, cmd)
-            return success(table_data)
-        return success()
+            return table_data
+        return None
 
     def get_data(self, data: Connect, db, other):
         page_size = other["pageSize"]  # 每页显示的记录数

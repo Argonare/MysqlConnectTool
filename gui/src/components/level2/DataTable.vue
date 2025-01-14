@@ -61,7 +61,6 @@ calHeight()
 const changeHeader = () => {
     headerType.value = headerType.value == 'en' ? "cn" : "en"
 }
-
 const getData = () => {
     console.log("获取数据")
     let param = JSON.parse(JSON.stringify(route.query))
@@ -92,6 +91,9 @@ const getData = () => {
 const flexWidth = (title, fontSize = 16) => {
     if (tableData.value.length === 0) { //表格没数据不做处理
         return;
+    }
+    if(route.query.type=="redis"){
+        return null
     }
     let titleWidth = 0
     let canvas = document.createElement("canvas");
@@ -383,6 +385,15 @@ const copySql = () => {
     toClipboard(nowSql.value)
      ElMessage.success("操作成功")
 }
+const setWidth=()=>{
+    if(!route.query){
+        return 0
+    }
+    if(route.query.type=="redis"){
+        return "50%"
+    }
+    return 0
+}
 </script>
 
 <template>
@@ -413,7 +424,7 @@ const copySql = () => {
             </template>
         </el-table-column>
         <el-table-column v-for="(item,index) in columnFilter" :key="index" :prop="item.prop" :label="item.label"
-                         :width="flexWidth(item.label)" :min-width="0" :show-overflow-tooltip="true">
+                         :width="flexWidth(item.label)" :min-width="setWidth()" :show-overflow-tooltip="true">
             <template #header>
                 <div class="flexRow">
                     <div class="flex1"> {{ headerType == 'en' ? item.label : item.comment }}</div>

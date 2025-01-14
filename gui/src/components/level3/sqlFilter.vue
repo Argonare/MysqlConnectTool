@@ -2,7 +2,7 @@
 import {computed, ref, toRefs, watch} from "vue";
 import ListSearch from "@/components/level3/listSearch.vue";
 import {useRoute} from "vue-router";
-
+import {getFilterValue} from "@/js/connectTree";
 const props = defineProps({
 	headerType: String,
 	tableColumn: Array
@@ -24,19 +24,7 @@ const showSearch = ref(0)
 const activeIndex = ref(-1)
 const listSearch = ref()
 const applyFilter = () => {
-	let res = []
-	searchParam.value.forEach((e, index) => {
-		let param = `${e.field} ${e.cal}`
-		if (!e.noValue) {
-			param += ` '${e.value}'`
-		}
-		if (index !== searchParam.value.length - 1) {
-			param += ` ${e.seq}`
-		}
-
-		res.push(param)
-	})
-	emit('getRes', res.join(" "))
+	emit('getRes', getFilterValue(searchParam.value,route.query.type).join(" "))
 }
 const clearFilter = () => {
 	searchParam.value = []
@@ -85,8 +73,7 @@ let globalEvent = null;
 
 const showSearchPanel = (event, value, mode = 3, index, name) => {
 	activeIndex.value = index
-	let menu = document.querySelector(`.DataTable_${route.query.table} #searchList`);
-
+	let menu = document.querySelector(`.DataTable_${route.query.nickName} #searchList`);
 	let item = menu.parentElement.parentElement.parentElement.parentElement.parentElement
 
 	listItemIndex = index
