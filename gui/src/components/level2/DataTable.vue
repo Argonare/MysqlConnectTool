@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {useRoute} from "vue-router";
 import {computed, getCurrentInstance, nextTick, onMounted, reactive, ref, toRaw} from "vue";
-
+import {getDbChangeData} from "@/js/connectTree";
 onMounted(() => {
     getDesc()
 })
@@ -305,42 +305,12 @@ const deleteLine = () => {
 }
 //应用修改
 //TODO 删除判断
-const changeApply = () => {
-    console.log("点击了应用")
-    let d = {}
-    let insertData = []
-    tableData.value.forEach(e => {
-        d[e["@uuid"]] = e
-        if (e['@add'] === 1) {
-            insertData.push(e)
-        }
-    })
-    oldData.forEach(e => {
-        let item = d[e['@uuid']]
-        let res = {primaryKey: primaryKey}
-        let flag = 0
-        if (item == null) {
-            //添加的数据
-            return;
-        }
-        for (let i in e) {
-            if (i == "@uuid") continue;
-            if (item[i] != e[i]) {
-                res[i] = {value: item[i], type: field[i].Type}
-                flag = 1
-            }
-        }
-        if (flag == 1) {
-            changedData[oldDataMap[e['@uuid']][primaryKey]] = res
-        }
-    })
-    proxy.$request("update_table", Object.assign({}, route.query, {
-        updateData: changedData,
-        insertData: insertData
-    })).then(() => {
-        document.querySelectorAll(".changed").forEach(e => e.classList.remove("changed"))
-        tableData.value.forEach(e => e['@add'] = 0)
-    })
+const changeApply=()=>{
+    let param=getDbChangeData(route.query.type,tableData.value,oldData,primaryKey,field,changedData,oldDataMap)
+     proxy.$request("update_table", Object.assign({}, route.query, param)).then(() => {
+            document.querySelectorAll(".changed").forEach(e => e.classList.remove("changed"))
+            tableData.value.forEach(e => e['@add'] = 0)
+        })
 }
 const hideColumn = () => {
     tableColumn[modeData['no'] - 1]["hideFlag"] = true

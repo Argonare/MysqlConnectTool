@@ -62,3 +62,6 @@ class ConnectBase:
 
     def get_data(self, data: Connect, db, other):
         return self.db_bean[data.name].get_data(data, db,other)
+
+    def update_table(self, data: Connect, db, other):
+        return self.db_bean[data.name].update_table(data, db, other)

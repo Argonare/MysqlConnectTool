@@ -88,5 +88,77 @@ const getFilterValue = (searchParam, type) => {
     return res
 }
 
+const getFilterField = (type) => {
+    if (type === 'redis') {
+        return [{key: '包含', value: '包含',}]
+    } else {
+        return [
+            {key: '=', value: '=',},
+            {key: '>', value: '>',},
+            {key: '>=', value: '>=',},
+            {key: '<', value: '<',},
+            {key: '<=', value: '<=',},
+            {key: '为空', value: "is null", noValue: true},
+            {key: '不为空', value: "is not null", noValue: true},]
+    }
+}
 
-export {loadTree,getFilterValue}
+const getDbChangeData = (type, tableData, oldData, primaryKey, field, changedData, oldDataMap) => {
+     let d = {}
+    if (type == 'redis') {
+         tableData.forEach(e => {
+            d[e["@uuid"]] = e
+        })
+        oldData.forEach(e => {
+
+            let item = d[e['@uuid']]
+            let res = {primaryKey: primaryKey}
+            let flag = 0
+            if (item == null) {
+                //添加的数据
+                return;
+            }
+            if(item.value!=e.value){
+                changedData[item.key]=item.value
+            }
+
+        })
+
+        console.log("点击了redis应用")
+        console.log(changedData)
+    } else {
+        console.log("点击了mysql应用")
+
+        let insertData = []
+        tableData.forEach(e => {
+            d[e["@uuid"]] = e
+            if (e['@add'] === 1) {
+                insertData.push(e)
+            }
+        })
+        oldData.forEach(e => {
+            let item = d[e['@uuid']]
+            let res = {primaryKey: primaryKey}
+            let flag = 0
+            if (item == null) {
+                //添加的数据
+                return;
+            }
+            for (let i in e) {
+                if (i == "@uuid") continue;
+                if (item[i] != e[i]) {
+                    res[i] = {value: item[i], type: field[i].Type}
+                    flag = 1
+                }
+            }
+            if (flag == 1) {
+                changedData[oldDataMap[e['@uuid']][primaryKey]] = res
+            }
+        })
+        return {updateData: changedData, insertData: insertData}
+
+    }
+}
+
+
+export {loadTree, getFilterValue, getFilterField, getDbChangeData}

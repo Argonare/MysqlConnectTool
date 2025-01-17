@@ -2,7 +2,7 @@
 import {computed, ref, toRefs, watch} from "vue";
 import ListSearch from "@/components/level3/listSearch.vue";
 import {useRoute} from "vue-router";
-import {getFilterValue} from "@/js/connectTree";
+import {getFilterField, getFilterValue} from "@/js/connectTree";
 const props = defineProps({
 	headerType: String,
 	tableColumn: Array
@@ -32,35 +32,7 @@ const clearFilter = () => {
 
 const showMode = ref(3)
 
-const calItem = [
-	{
-		key: '=',
-		value: '=',
-	}, {
-		key: '>',
-		value: '>',
-	}, {
-		key: '>=',
-		value: '>=',
-	}, {
-		key: '<',
-		value: '<',
-	}, {
-		key: '<=',
-		value: '<=',
-	},
-	{
-		key: '为空',
-		value: "is null",
-		noValue: true
-	},
-	{
-		key: '不为空',
-		value: "is not null",
-		noValue: true
-	},
-]
-
+const calItem = getFilterField(route.query.type)
 const searchList = computed(() => {
 	if (showMode.value === 2) {
 		return calItem
@@ -166,7 +138,7 @@ defineExpose({switchFilter, addParam,getSearchLength,showSearchPanel})
 					</el-button>
 					<el-button type="primary" v-else link
 					           @click="($event)=>showSearchPanel($event,'',1,index,'value')">
-						""
+						《请输入》
 					</el-button>
 				</div>
 

@@ -83,3 +83,24 @@ class MysqlConnect:
         count_cmd = "select count(1) as ct from " + data.table
         ct = self.cursor_data(db, count_cmd)[0]["ct"]
         return {"list": table_data, "count": ct, "cmd": cmd}
+
+    def update_table(self, data: Connect, db, other):
+        cmd = ""
+        for i in data.updateData:
+            lis = []
+            cmd += "update " + data.table + " set "
+            for j in data.updateData[i]:
+                if j == "primaryKey":
+                    continue
+                lis.append(j + "=" + convert_type(data.updateData[i][j]["value"], data.updateData[i][j]["type"]))
+            cmd += ",".join(lis) + " where " + data.updateData[i]["primaryKey"] + " = '" + i + "';"
+        print(cmd)
+
+        for i in other["insertData"]:
+            del i["@add"]
+            field = ",".join(['`' + x + '`' for x in i.keys()])
+            cmd += "insert into " + data.table + " (" + field + ") values( " + ','.join(
+                [str(x) for x in i.values()]) + ');'
+        self.cursor_data(db, cmd)
+        db.commit()
+        return None
