@@ -33,16 +33,10 @@ def error(msg="操作失败"):
     return json.dumps({"code": 500, "msg": str(msg)})
 
 
-
-
-
 def get_cursor(db, cmd):
     cursor = db.cursor()
     cursor.execute(cmd)
     return cursor
-
-
-
 
 
 def check_empty(data: str):
@@ -98,3 +92,6 @@ def get_file(path: str, default_str: str, result_obj):
             if data is not None and data != "":
                 return json.loads(data)
     return result_obj
+
+
+

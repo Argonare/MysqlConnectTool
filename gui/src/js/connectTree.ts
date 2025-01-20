@@ -18,16 +18,11 @@ interface table {
     name: string
 }
 
-const loadTree = (node, resolve: (data: Tree[]) => void, reject, type, defaultData, proxy) => {
+const loadTree = (node, resolve: (data) => void, reject, type, defaultData, proxy) => {
     if (node.level === 0) {
         resolve(defaultData)
     } else if (node.level === 1) {
         proxy.$request("get_database", toRaw(node.data)).then(data => {
-            data.forEach(e => {
-                e = <Tree>e
-                e.showName = e.name
-
-            })
             return resolve(data)
         }).catch(() => {
             return reject()
@@ -41,11 +36,23 @@ const loadTree = (node, resolve: (data: Tree[]) => void, reject, type, defaultDa
     }
 
 }
-const loadRedisTree = (node: Node, resolve: (data: Tree[]) => void, reject, defaultData, proxy) => {
+const loadRedisTree = (node, resolve: (data) => void, reject, defaultData, proxy) => {
+    let d = JSON.parse(JSON.stringify(toRaw(node.data)))
+    d.database = node.data.name
 
-    resolve([])
+    if (node.level == 2) {
+        proxy.$request("get_table", d).then(data => {
+            return resolve(data)
+        }).catch(() => {
+            return reject()
+        })
+    }else{
+        console.log(d.children)
+        return resolve(d.children)
+    }
+
 }
-const loadMysqlTree = (node, resolve: (data: Tree[]) => void, reject, defaultData, proxy) => {
+const loadMysqlTree = (node, resolve: (data) => void, reject, defaultData, proxy) => {
 
     if (node.level === 2) {
         let d = JSON.parse(JSON.stringify(toRaw(node.parent.data)))
@@ -104,32 +111,30 @@ const getFilterField = (type) => {
 }
 
 const getDbChangeData = (type, tableData, oldData, primaryKey, field, changedData, oldDataMap) => {
-     let d = {}
+    let d = {}
+    let insertData = []
     if (type == 'redis') {
-         tableData.forEach(e => {
-            d[e["@uuid"]] = e
+        tableData.forEach(e => {
+            d[e['key']] = e
         })
         oldData.forEach(e => {
 
-            let item = d[e['@uuid']]
+            let item = d[e['key']]
             let res = {primaryKey: primaryKey}
             let flag = 0
             if (item == null) {
                 //添加的数据
                 return;
             }
-            if(item.value!=e.value){
-                changedData[item.key]=item.value
+            if (item.value != e.value) {
+                console.log(111)
+                changedData[item.key] = item.value
             }
 
         })
-
         console.log("点击了redis应用")
-        console.log(changedData)
     } else {
         console.log("点击了mysql应用")
-
-        let insertData = []
         tableData.forEach(e => {
             d[e["@uuid"]] = e
             if (e['@add'] === 1) {
@@ -155,9 +160,9 @@ const getDbChangeData = (type, tableData, oldData, primaryKey, field, changedDat
                 changedData[oldDataMap[e['@uuid']][primaryKey]] = res
             }
         })
-        return {updateData: changedData, insertData: insertData}
 
     }
+    return {updateData: changedData, insertData: insertData}
 }
 
 

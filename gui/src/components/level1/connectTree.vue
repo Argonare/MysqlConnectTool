@@ -32,6 +32,7 @@ const getSavedData = async () => {
         data.forEach(e => {
             e = <Tree>e
             e.showName = e.name
+            e.level = 1
         })
         let saved: Tree[] = data
         if (saved == null) {
@@ -67,24 +68,16 @@ const addData = (treeData: object) => {
 
 interface Tree {
     id: number
-    name: string
+    showName: string
     level: number
     database: string
     type: string,
-    children?: database[]
+    children?: Tree[]
 }
 
-interface database {
-    name: string
-    children?: table[]
-}
-
-interface table {
-    name: string
-}
 
 let clickNum = 0
-const handleNodeClick = (data: Tree) => {
+const handleNodeClick = (data) => {
     console.log(111)
     clickNum++;
     setTimeout(function () {
@@ -129,8 +122,7 @@ const loadNode = (node, resolve: (data: Tree[]) => void, reject) => {
     if (!connectType && node.parent) {
         connectType = node.parent.data.type
     }
-    console.log(connectType)
-    loadTree(node, resolve, reject, connectType, data, proxy)
+    return loadTree(node, resolve, reject, connectType, data, proxy)
 }
 //############################### 右键菜单 ####################
 let currentData = null;
@@ -263,10 +255,19 @@ defineExpose({
 const searchInput = ref()
 const getTypeImg = (data) => {
     if (data.type) {
-        if (data.type == "redis" && data.level == 2) {
-            return `/src/assets/img/redisDb.svg`
+        if (data.type == "redis") {
+            if (data.level == 1) {
+                return `/src/assets/img/${data.type}.svg`
+            } else if (data.level == 2) {
+                return `/src/assets/img/redisDb.svg`
+            } else if (data.level == 3) {
+                return `/src/assets/img/key.svg`
+            }
+            return;
+        } else {
+            return `/src/assets/img/${data.type}.svg`
         }
-        return `/src/assets/img/${data.type}.svg`
+        
     }
     if (data.Database) {
         return `/src/assets/img/database.svg`

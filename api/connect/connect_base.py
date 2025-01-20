@@ -13,8 +13,10 @@ class ConnectBase:
     def open_connect(self, data):
         connect, other = self.convert(Connect, data)
         connect_name = connect.name
-        if not apiUtil.check_empty(connect.database):
-            connect_name = connect.name + ":" + connect.database
+        if type(connect.database) == int:
+            connect_name = str(connect.name) + ":" + str(connect.database)
+        elif not apiUtil.check_empty(connect.database):
+            connect_name = str(connect.name) + ":" + connect.database
         final_connect = connect
         if connect_name not in self.db_connect:
             if connect.name in self.db_connect:
@@ -33,7 +35,7 @@ class ConnectBase:
         return connect, db, other
 
     def get_databases(self, data: Connect, db):
-        return self.db_bean[data.name].get_databases(db)
+        return self.db_bean[data.name].get_databases(data,db)
 
     def set_config(self, name, data):
         self.db_connect[name] = data
@@ -61,7 +63,7 @@ class ConnectBase:
         return self.db_bean[data.name].desc_table(data, db)
 
     def get_data(self, data: Connect, db, other):
-        return self.db_bean[data.name].get_data(data, db,other)
+        return self.db_bean[data.name].get_data(data, db, other)
 
     def update_table(self, data: Connect, db, other):
         return self.db_bean[data.name].update_table(data, db, other)

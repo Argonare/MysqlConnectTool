@@ -30,7 +30,7 @@ class MysqlConnect:
         except Exception as err:
             raise Exception(err)
 
-    def get_databases(self, db):
+    def get_databases(self, data: Connect, db):
         cmd = "show databases"
         database: list = self.cursor_data(db, cmd)
         for i in database:
