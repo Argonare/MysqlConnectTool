@@ -28,7 +28,6 @@ let tmpData = []
 
 const getSavedData = async () => {
     proxy.$request("get_config", {}).then(data => {
-        console.log(data)
         data.forEach(e => {
             e = <Tree>e
             e.showName = e.name
@@ -98,12 +97,25 @@ const handleNodeClick = (data) => {
                 let connect_data = toRaw(tree.value.getNode(data.id).parent.data)
                 store.state.lastConnect = connect_data
                 connect_data.database = data.databases
-                connect_data.table = data.name
-                connect_data.nickName = "DB" + data.name
+                connect_data.table = data.showName
+                connect_data.nickName = "DB" + data.showName
                 console.log(connect_data)
                 // connect_data.comment=data.comment
                 delete connect_data.sql
                 router.push({path: "/DataTable", query: connect_data})
+            } else if (data.type === "redis" && data.level == 4) {
+                console.log("点击了redis左侧菜单")
+                let connect_data = toRaw(tree.value.getNode(data.id).parent.data)
+                store.state.lastConnect = connect_data
+                connect_data.database = data.databases
+                connect_data.table = data.showName
+                connect_data.nickName = data.id
+                console.log(connect_data)
+                // connect_data.comment=data.comment
+                delete connect_data.sql
+                delete connect_data.value
+                delete connect_data.children
+                router.push({path: "/redisEditor", query: connect_data})
             }
         }
         clickNum = 0

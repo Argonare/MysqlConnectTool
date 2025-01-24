@@ -37,7 +37,7 @@ class RedisConnect:
 
     def get_data(self, data: Connect, db, other):
         db.select(int(data.table))
-        if "whereData" in other and other["whereData"] is not None:
+        if "whereData" in other and other["whereData"] is not None and len(other["whereData"]) > 0:
             result = [self.deal_key(db, key, db.get(key)) for key in db.scan_iter(match='*' + other['whereData'] + '*')]
         else:
             result = [self.deal_key(db, key, db.get(key)) for key in db.scan_iter()]
@@ -48,27 +48,36 @@ class RedisConnect:
             db.set(i["key"], i["value"])
         return None
 
+    def select_by_key(self, data: Connect, db, other):
+        key = other["nickName"]
+        res = self.deal_key(db, key, db.get(key))
+        res["ttl"] = db.ttl(other["nickName"])
+
+        return res
+
     def deal_key(self, db, key, value):
         key_type = db.type(key).decode('utf-8')
-        key_decode = ''
-        value_decode = ''
+        key_decode = key
+        value_decode = value
         try:
-            key_decode = key.decode('utf-8')
-            value_decode = value.decode('utf-8')
+            if type(key_decode) != str:
+                key_decode = key.decode('utf-8')
+            if type(value) == bytes:
+                value_decode = value.decode('utf-8')
         except Exception as err:
             value_decode = re.findall("(.*?)\\\\", str(value[8:]))[0][2:-1]
-            return {"value": value, "key": key_decode, "readOnly": True}
+            return {"value": value_decode, "key": key_decode, "readOnly": True}
 
         if key_type == 'string':
             if len(value_decode) > 0 and value_decode[0] == "\"" and value_decode[-1] == "\"":
                 value_decode = value_decode[1:-1]
 
             if value_decode == "true":
-                return {"value": True, "key": key_decode, "type": "boolean"}
+                return {"value": True, "key": key_decode, "type": "string"}
             if value_decode == "false":
-                return {"value": False, "key": key_decode, "type": "boolean"}
+                return {"value": False, "key": key_decode, "type": "string"}
             return {"value": value_decode, "key": key_decode, "type": "string"}
-        return {"value": value, "key": key_decode}
+        return {"value": value, "key": key_decode, "type": key_type}
 
     # 辅助函数，用于将层级列表转换为树形结构
     def build_tree(self, keys, name):
@@ -77,6 +86,8 @@ class RedisConnect:
         added_keys = set()
 
         for key in keys:
+            if "session" in key["key"]:
+                print(111)
             parts = key["key"].split(':')
             current = tree
             # 遍历键的每一部分，构建树形结构
@@ -89,13 +100,15 @@ class RedisConnect:
                         'children': {},
                         'leaf': False,
                         "type": "redis",
-                        "level": 4
+                        "level": 4,
                     }
                 # 如果这不是键的最后一部分，那么它肯定不是叶子节点
                 if i < len(parts) - 1:
                     current[part]['leaf'] = False
+
                     current[part]["level"] = 3
                 else:
+                    current[part]['id'] = key["key"]
                     current[part]['children'] = []
                     continue
                 current = current[part]['children']
@@ -119,7 +132,7 @@ class RedisConnect:
     def dfs(self, tree):
         for key in tree:
             if not tree[key]['children']:
-                return
+                continue
             else:
                 self.dfs(tree[key]['children'])
                 tree[key]['children'] = list(tree[key]['children'].values())

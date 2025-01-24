@@ -33,6 +33,10 @@ const routes = [
         path: "/preSet",
         name: "插入字段预设",
         component: () => import(/* webpackChunkName: "about" */ "../components/level2/preSet.vue"),
+    }, {
+        path: "/redisEditor",
+        name: "redis编辑器",
+        component: () => import(/* webpackChunkName: "about" */ "../components/level2/redisEditor.vue"),
     }
 ];
 

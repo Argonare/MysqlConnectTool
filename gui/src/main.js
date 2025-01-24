@@ -18,7 +18,6 @@ import router from './route'
 import contextmenu from "v-contextmenu";
 import "v-contextmenu/dist/themes/default.css";
 
-
 const app = createApp(App)
 
 // app.use(Vuex)

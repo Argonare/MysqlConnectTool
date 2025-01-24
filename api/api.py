@@ -146,6 +146,9 @@ class API(System, Storage):
     def update_table(self, data: Connect, db, other):
         return success(self.db_base.update_table(data, db,other))
 
+    @connect
+    def select_by_key(self, data: Connect, db, other):
+        return success(self.db_base.select_by_key(data, db,other))
 
     @connect
     def exec_sql(self, data: Connect, db, other):

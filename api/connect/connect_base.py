@@ -67,3 +67,6 @@ class ConnectBase:
 
     def update_table(self, data: Connect, db, other):
         return self.db_bean[data.name].update_table(data, db, other)
+
+    def select_by_key(self, data: Connect, db, other):
+        return self.db_bean[data.name].select_by_key(data, db, other)
