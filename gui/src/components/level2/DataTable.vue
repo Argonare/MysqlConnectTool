@@ -1,15 +1,20 @@
 <script setup lang="ts">
 import {useRoute} from "vue-router";
-import {computed, getCurrentInstance, nextTick, onMounted, reactive, ref, toRaw} from "vue";
+import {computed, getCurrentInstance, markRaw, nextTick, onMounted, reactive, ref, toRaw} from "vue";
 import {getDbChangeData} from "@/js/connectTree";
+
+let editorCompoment = null
+const subEditor = ref()
 onMounted(() => {
     getDesc()
+    editorCompoment = markRaw(redisEditor);
 })
 import {Check, Close, Compass, Filter, Plus, Switch} from "@element-plus/icons-vue";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {empty, emptyDefault} from '@/js/common'
 import SqlFilter from "@/components/level3/sqlFilter.vue";
 import useClipboard from "vue-clipboard3";
+import redisEditor from "./redisEditor.vue";
 
 const {proxy}: any = getCurrentInstance();
 const route = useRoute();
@@ -92,7 +97,7 @@ const flexWidth = (title, fontSize = 16) => {
     if (tableData.value.length === 0) { //表格没数据不做处理
         return;
     }
-    if(route.query.type=="redis"){
+    if (route.query.type == "redis") {
         return null
     }
     let titleWidth = 0
@@ -119,12 +124,13 @@ const iptBlur = (scope, e: any) => {
 
 let editX = ref(null);
 let editY = ref(null);
-let chooseData = null
 const cellClick = (scope) => {
-    chooseData = scope
     oldValue = tableData.value[scope.$index][scope.column.property]
     editX.value = scope.$index
     editY.value = scope.column.no
+    selectedRow.value.clear()
+    selectedRow.value.add(scope.$index)
+    console.log(scope.$index)
 }
 
 
@@ -222,6 +228,17 @@ const rowRightClick = (row, event, showMenu = false) => {
     clearSelected()
     document.getElementsByClassName("table")[0].classList.add("showTree")
     selectedRow.value.add(row.$index)
+    let compomentData = {...route.query}
+    compomentData.nickName = row.row.key
+    drawer.value = true
+    nextTick(()=>{
+        setTimeout(()=>{
+             subEditor.value.selectByKey(compomentData)
+        })
+        
+    })
+   
+    
     if (showMenu) {
         mode.value = "row"
         modeData = row
@@ -305,12 +322,12 @@ const deleteLine = () => {
 }
 //应用修改
 //TODO 删除判断
-const changeApply=()=>{
-    let param=getDbChangeData(route.query.type,tableData.value,oldData,primaryKey,field,changedData,oldDataMap)
-     proxy.$request("update_table", Object.assign({}, route.query, param)).then(() => {
-            document.querySelectorAll(".changed").forEach(e => e.classList.remove("changed"))
-            tableData.value.forEach(e => e['@add'] = 0)
-        })
+const changeApply = () => {
+    let param = getDbChangeData(route.query.type, tableData.value, oldData, primaryKey, field, changedData, oldDataMap)
+    proxy.$request("update_table", Object.assign({}, route.query, param)).then(() => {
+        document.querySelectorAll(".changed").forEach(e => e.classList.remove("changed"))
+        tableData.value.forEach(e => e['@add'] = 0)
+    })
 }
 const hideColumn = () => {
     tableColumn[modeData['no'] - 1]["hideFlag"] = true
@@ -353,17 +370,25 @@ const toFilter = ($event) => {
 }
 const copySql = () => {
     toClipboard(nowSql.value)
-     ElMessage.success("操作成功")
+    ElMessage.success("操作成功")
 }
-const setWidth=()=>{
-    if(!route.query){
+const setWidth = () => {
+    if (!route.query) {
         return 0
     }
-    if(route.query.type=="redis"){
+    if (route.query.type == "redis") {
         return "50%"
     }
     return 0
 }
+const showInput = (scope) => {
+    if (route.query.type === "redis") {
+        return false
+    }
+    return editX == scope.$index && editY == scope.column.no
+}
+const drawer = ref(false)
+
 </script>
 
 <template>
@@ -387,7 +412,7 @@ const setWidth=()=>{
             <template #default="scope">
                 <div @click="rowRightClick(scope,null)"
                      @click.right="(event)=>rowRightClick(scope,event,true)">
-                    <el-icon>
+                    <el-icon class="tableIcon">
                         <DArrowRight/>
                     </el-icon>
                 </div>
@@ -405,9 +430,9 @@ const setWidth=()=>{
             
             </template>
             <template #default="scope">
-                <input v-if="editX==scope.$index&& editY==scope.column.no"
+                <input v-if="showInput(scope)"
                        v-model="scope.row[item.prop]" id="ipt" class="ipt" v-focus
-                       :placeholder="scope.row[item.prop]==null?'NULL':''"
+                       :placeholder="scope.row[item.prop]==null?'NULL':''" spellcheck="false"
                        @blur="iptBlur(scope, $event)"/>
                 <div class="iptDiv" v-else :class="scope.row[item.prop]==null?'nullDiv':''"
                      @click.right="(event)=>cellRightClick(scope,event,true)"
@@ -434,7 +459,8 @@ const setWidth=()=>{
             layout="total, prev, pager, next"
         />
         <div class="bottomCheck">
-            <el-button type="primary" :icon="Check" :disabled="changedFlag==0" @click="changeApply">应用</el-button>
+            <el-button type="primary" :icon="Check" :disabled="changedFlag==0" @click="changeApply">应用
+            </el-button>
             <el-button :icon="Close" :disabled="changedFlag==0" @click="clearChange">取消</el-button>
         </div>
     </div>
@@ -449,12 +475,21 @@ const setWidth=()=>{
             <p @click="deleteLine" v-if="mode=='row'">删除 记录</p>
         </div>
     </div>
+    <el-drawer v-model="drawer" title="编辑">
+        <component :is="editorCompoment" ref="subEditor"></component>
+    </el-drawer>
+
+
 </template>
 
 <style scoped>
 
 .bottomSql {
     width: 100%;
+}
+
+:deep(.el-table__row) {
+    height: 30px;
 }
 
 .filterBtn {
@@ -546,6 +581,10 @@ const setWidth=()=>{
     height: 100%;
 }
 
+:deep(.tableIcon) {
+    height: var(--table-height);
+}
+
 :deep(.el-divider) {
     margin: 5px 0;
     width: auto;
@@ -561,11 +600,18 @@ const setWidth=()=>{
 }
 
 :deep(.ipt) {
-    border: none;
     outline: none;
     padding: 0 5px;
     width: -webkit-fill-available;
-    height: 23px;
+    height: calc(var(--table-height) - 2px);
+    line-height: calc(var(--table-height) - 2px);
+    border: 1px solid transparent;
+}
+
+:deep(.ipt):focus {
+    border: 1px solid #409EFF !important;
+    background: white !important;
+    color: black !important;
 }
 
 :deep(.el-popper) {
@@ -588,13 +634,10 @@ const setWidth=()=>{
 
 :deep(.subCell) .cell {
     padding: 0;
-    height: 20px;
+    height: var(--table-height);
+    line-height: var(--table-height);
 }
 
-:deep(.el-table__cell) {
-    height: 20px;
-    padding: 4px 0 !important;
-}
 
 :deep(.el-table__body) {
     padding-bottom: 1em;
@@ -604,6 +647,11 @@ const setWidth=()=>{
     width: 100%;
     background: white;
     padding: 5px 10px
+}
+
+:deep(.selectedRow .ipt) {
+    background: #409EFF;
+    color: white;
 }
 
 

@@ -118,7 +118,8 @@ defineExpose({
 .panel {
     display: flex;
     flex-direction: column;
-    height: 100%
+    height: 100%;
+    margin-right: 0.35em;
 }
 
 .el-tabs {

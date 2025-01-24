@@ -39,8 +39,9 @@ const loadTree = (node, resolve: (data) => void, reject, type, defaultData, prox
 const loadRedisTree = (node, resolve: (data) => void, reject, defaultData, proxy) => {
     let d = JSON.parse(JSON.stringify(toRaw(node.data)))
     d.database = node.data.name
-
+    console.log(111)
     if (node.level == 2) {
+        d.table=node.data.showName
         proxy.$request("get_table", d).then(data => {
             return resolve(data)
         }).catch(() => {

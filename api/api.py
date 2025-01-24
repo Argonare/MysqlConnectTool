@@ -199,12 +199,8 @@ class API(System, Storage):
 
     @connect
     def delete_sql(self, data: Connect, db, other):
-        if "ids" not in other:
-            return error("未选中数据")
-        cmd = "delete from {0} where {1} in ({2})".format(data.table, other["primaryKey"], ",".join(other["ids"]))
-        self.cursor_data(db, cmd)
-        db.commit()
-        return success()
+        return self.db_base.delete_sql(data, db,other)
+
 
     @connect
     def alert_table(self, data: Connect, db, other: dict):

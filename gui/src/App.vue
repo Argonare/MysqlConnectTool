@@ -15,6 +15,9 @@ import Index from "./view/index.vue";
 
 
 <style>
+:root{
+    --table-height:32px
+}
 *{
     font-family: PingFang SC;
     font-weight: 400;

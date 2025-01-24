@@ -2,7 +2,7 @@ import uuid
 
 import redis
 import re
-
+from api.apiUtil import *
 from api.model.connect import Connect
 
 
@@ -27,7 +27,8 @@ class RedisConnect:
                 in range(1, db_num + 1)]
 
     def get_table(self, data: Connect, db):
-        result = [self.deal_key(db, key, db.get(key)) for key in db.scan_iter()]
+        db.select(int(data.table))
+        result = [self.deal_key(db, key,  self.get_key(db,key)) for key in db.scan_iter()]
 
         return self.build_tree(result, data.name)
 
@@ -37,15 +38,18 @@ class RedisConnect:
 
     def get_data(self, data: Connect, db, other):
         db.select(int(data.table))
-        if "whereData" in other and other["whereData"] is not None and len(other["whereData"]) > 0:
-            result = [self.deal_key(db, key, db.get(key)) for key in db.scan_iter(match='*' + other['whereData'] + '*')]
+        if "wheresData" in other and other["whereData"] is not None and len(other["whereData"]) > 0:
+            result = [self.deal_key(db, key,  self.get_key(db,key)) for key in db.scan_iter(match='*' + other['whereData'] + '*')]
         else:
-            result = [self.deal_key(db, key, db.get(key)) for key in db.scan_iter()]
+            result = [self.deal_key(db, key, self.get_key(db,key)) for key in db.scan_iter(match='*' + other['whereData'] + '*')]
         return {"list": result, "count": len(result), }
 
     def update_table(self, data: Connect, db, other):
         for i in data.updateData:
-            db.set(i["key"], i["value"])
+            if i['ttl'] is not None:
+                db.setex(i["key"], value=i["value"], time=i["ttl"])
+            else:
+                db.set(i["key"], i["value"])
         return None
 
     def select_by_key(self, data: Connect, db, other):
@@ -54,6 +58,26 @@ class RedisConnect:
         res["ttl"] = db.ttl(other["nickName"])
 
         return res
+
+    def delete_sql(self, data: Connect, db, other):
+        if "keys" not in other:
+            return error("未选中数据")
+
+        for i in other["keys"]:
+            db.delete(i)
+        return success()
+
+    def get_key(self,db,key):
+        key_type = db.type(key).decode('utf-8')
+        if key_type == "string":
+            return db.get(key)
+        elif key_type == "hash":
+            result={}
+            data=db.hgetall(key)
+
+            for i in data:
+                result[i.decode('utf-8')]=data[i].decode('utf-8')
+            return result
 
     def deal_key(self, db, key, value):
         key_type = db.type(key).decode('utf-8')

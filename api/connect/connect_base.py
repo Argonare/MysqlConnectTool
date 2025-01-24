@@ -70,3 +70,6 @@ class ConnectBase:
 
     def select_by_key(self, data: Connect, db, other):
         return self.db_bean[data.name].select_by_key(data, db, other)
+
+    def delete_sql(self, data: Connect, db, other):
+        return self.db_bean[data.name].delete_sql(data, db, other)
