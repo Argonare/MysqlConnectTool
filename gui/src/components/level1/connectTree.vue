@@ -260,9 +260,16 @@ const handleEnterKey = (event) => {
     }
     
 }
+const nodeDelete = (key) => {
+    console.log("删除了" + key)
+    tree.value.remove(key)
+}
+
+
 defineExpose({
     addData,
-    refreshData
+    refreshData,
+    nodeDelete
 })
 const searchInput = ref()
 const getTypeImg = (data) => {

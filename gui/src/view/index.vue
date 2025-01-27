@@ -107,6 +107,10 @@ const openEditor = () => {
 const preSet = () => {
     router.push({path: "/preSet"})
 }
+const nodeDelete=(key)=>{
+    connectTree.value.nodeDelete(key)
+}
+
 </script>
 
 <template>
@@ -139,7 +143,7 @@ const preSet = () => {
                 <div id="resize" class="resize" title="收缩侧边栏">⋮</div>
             </div>
             <div class="flex1" id="right-content">
-                <right-window ref="rightWindow"></right-window>
+                <right-window ref="rightWindow" @node-delete="nodeDelete"></right-window>
             </div>
         </el-col>
     </div>
@@ -173,7 +177,7 @@ const preSet = () => {
     border-radius: 5px;
     margin-top: -10px;
     width: 10px;
-    height: 40px;
+    height: 45px;
     background-size: cover;
     background-position: 50%;
     font-size: 32px;

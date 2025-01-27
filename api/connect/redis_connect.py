@@ -28,7 +28,7 @@ class RedisConnect:
 
     def get_table(self, data: Connect, db):
         db.select(int(data.table))
-        result = [self.deal_key(db, key,  self.get_key(db,key)) for key in db.scan_iter()]
+        result = [self.deal_key(db, key, self.get_key(db, key)) for key in db.scan_iter()]
 
         return self.build_tree(result, data.name)
 
@@ -39,20 +39,26 @@ class RedisConnect:
     def get_data(self, data: Connect, db, other):
         db.select(int(data.table))
         if "wheresData" in other and other["whereData"] is not None and len(other["whereData"]) > 0:
-            result = [self.deal_key(db, key,  self.get_key(db,key)) for key in db.scan_iter(match='*' + other['whereData'] + '*')]
+            result = [self.deal_key(db, key, self.get_key(db, key)) for key in
+                      db.scan_iter(match='*' + other['whereData'] + '*')]
         else:
-            result = [self.deal_key(db, key, self.get_key(db,key)) for key in db.scan_iter(match='*' + other['whereData'] + '*')]
+            result = [self.deal_key(db, key, self.get_key(db, key)) for key in
+                      db.scan_iter(match='*' + other['whereData'] + '*')]
         return {"list": result, "count": len(result), }
 
     def update_table(self, data: Connect, db, other):
         for i in data.updateData:
-            if i['ttl'] is not None:
-                db.setex(i["key"], value=i["value"], time=i["ttl"])
+            ttl = int(i["ttl"]) if "ttl" in i else None
+            if i['ttl'] is not None and ttl > 0:
+                db.setex(i["key"], ttl, i["value"])
+            elif db.exists(i["key"]) and ttl <= 0 < db.ttl(i["key"]):
+                db.persist(i["key"])
             else:
                 db.set(i["key"], i["value"])
         return None
 
     def select_by_key(self, data: Connect, db, other):
+        db.select(int(data.table))
         key = other["nickName"]
         res = self.deal_key(db, key, db.get(key))
         res["ttl"] = db.ttl(other["nickName"])
@@ -60,6 +66,7 @@ class RedisConnect:
         return res
 
     def delete_sql(self, data: Connect, db, other):
+        db.select(int(data.table))
         if "keys" not in other:
             return error("未选中数据")
 
@@ -67,16 +74,16 @@ class RedisConnect:
             db.delete(i)
         return success()
 
-    def get_key(self,db,key):
+    def get_key(self, db, key):
         key_type = db.type(key).decode('utf-8')
         if key_type == "string":
             return db.get(key)
         elif key_type == "hash":
-            result={}
-            data=db.hgetall(key)
+            result = {}
+            data = db.hgetall(key)
 
             for i in data:
-                result[i.decode('utf-8')]=data[i].decode('utf-8')
+                result[i.decode('utf-8')] = data[i].decode('utf-8')
             return result
 
     def deal_key(self, db, key, value):
@@ -110,8 +117,6 @@ class RedisConnect:
         added_keys = set()
 
         for key in keys:
-            if "session" in key["key"]:
-                print(111)
             parts = key["key"].split(':')
             current = tree
             # 遍历键的每一部分，构建树形结构

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import {ref} from "vue";
+import {defineEmits, ref} from "vue";
 import {useStore} from "vuex";
 import {useRouter} from "vue-router";
 
@@ -37,7 +37,6 @@ const tabRemove = (targetName) => {
     //     return
     // }
     
-    console.log(targetName)
     if (store.state.activeIndex === targetName) {
         // 设置当前激活的路由
         if (store.state.openTab && store.state.openTab.length >= 2) {
@@ -59,7 +58,6 @@ document.addEventListener("mousedown", function (mouseEvent) {
     if (mouseEvent.button != 1) {
         return;
     }
-    console.log(mouseEvent)
     if (mouseEvent.target.className.indexOf("el-tabs__item") != -1) {
         let url = mouseEvent.target.id.replace("tab-", "");
         store.commit('delete_tabs', url);
@@ -68,6 +66,10 @@ document.addEventListener("mousedown", function (mouseEvent) {
     mouseEvent.stopPropagation();
 });
 
+const emit = defineEmits(['nodeDelete'])
+const nodeDelete = (key) => {
+    emit("nodeDelete", key)
+}
 
 defineExpose({
     getData
@@ -101,7 +103,7 @@ defineExpose({
             <div class="panel" ref="panel">
                 <router-view v-slot="{Component}">
                     <keep-alive>
-                        <component :is="Component"></component>
+                        <component :is="Component" @node-delete="nodeDelete"></component>
                     </keep-alive>
                 </router-view>
             </div>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {useRoute} from "vue-router";
-import {computed, getCurrentInstance, markRaw, nextTick, onMounted, reactive, ref, toRaw} from "vue";
+import {computed, defineEmits, getCurrentInstance, markRaw, nextTick, onMounted, reactive, ref, toRaw} from "vue";
 import {getDbChangeData} from "@/js/connectTree";
 
 let editorCompoment = null
@@ -231,13 +231,13 @@ const rowRightClick = (row, event, showMenu = false) => {
     let compomentData = {...route.query}
     compomentData.nickName = row.row.key
     drawer.value = true
-    nextTick(()=>{
-        setTimeout(()=>{
-             subEditor.value.selectByKey(compomentData)
+    nextTick(() => {
+        setTimeout(() => {
+            subEditor.value.selectByKey(compomentData)
         })
         
     })
-   
+    
     
     if (showMenu) {
         mode.value = "row"
@@ -387,8 +387,14 @@ const showInput = (scope) => {
     }
     return editX == scope.$index && editY == scope.column.no
 }
+const emit = defineEmits(['nodeDelete'])
 const drawer = ref(false)
-
+const onDelete = (key) => {
+    drawer.value=false
+    getData()
+    emit("nodeDelete",key)
+    console.log("delete")
+}
 </script>
 
 <template>
@@ -475,8 +481,8 @@ const drawer = ref(false)
             <p @click="deleteLine" v-if="mode=='row'">删除 记录</p>
         </div>
     </div>
-    <el-drawer v-model="drawer" title="编辑">
-        <component :is="editorCompoment" ref="subEditor"></component>
+    <el-drawer v-model="drawer" title="编辑" size="500px">
+        <component :is="editorCompoment" ref="subEditor" @removed="onDelete"></component>
     </el-drawer>
 
 
