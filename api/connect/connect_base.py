@@ -3,7 +3,7 @@ from copy import deepcopy
 from api import apiUtil
 from api.connect.mysql_connect import MysqlConnect
 from api.connect.redis_connect import RedisConnect
-from api.model.connect import Connect
+from api.model.connect import Connect, ConnectValidationError
 
 
 class ConnectBase:
@@ -12,6 +12,10 @@ class ConnectBase:
 
     def open_connect(self, data):
         connect, other = self.convert(Connect, data)
+        if isinstance(connect, Connect):
+            message = connect.validate_connection()
+            if message:
+                raise ConnectValidationError(message)
         connect_name = connect.name
         if type(connect.database) == int:
             connect_name = str(connect.name) + ":" + str(connect.database)
