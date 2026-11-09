@@ -24,7 +24,7 @@ from api.connect.connect_base import ConnectBase
 from api.model.dbField import DbField
 from api.storage import Storage
 from api.system import System
-from api.model.connect import Connect
+from api.model.connect import Connect, ConnectValidationError
 
 
 def close_connect(f):
@@ -44,7 +44,10 @@ class API(System, Storage):
     def connect(func) -> object:
         @wraps(func)
         def decorate(self, data):
-            connect, db, other = self.db_base.open_connect(data)
+            try:
+                connect, db, other = self.db_base.open_connect(data)
+            except ConnectValidationError as err:
+                return error(str(err))
 
             return func(self, connect, db, other)
 
@@ -113,6 +116,12 @@ class API(System, Storage):
         return success(result)
 
     def save_config(self, data):
+        if not data or not isinstance(data[-1], dict):
+            return error("保存连接失败：连接信息为空")
+        connect, other = self.db_base.convert(Connect, data[-1])
+        message = connect.validate_save()
+        if message:
+            return error(message)
         data[-1]["id"] = str(uuid.uuid4())
         saved = []
         result = get_file(self.config_path, "[]", saved)
